@@ -45,8 +45,5 @@ jobs:
     
     - run: |
         cp -a deployments/tls manifests/tls
-      
-    - name: Deploy kubeflow
-      run: |
         cd manifests
         while ! kustomize build tls | kubectl apply -f -; do echo "Retrying to apply resources"; sleep 10; done

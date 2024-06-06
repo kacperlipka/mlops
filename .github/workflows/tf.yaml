@@ -8,6 +8,7 @@ env:
   ARM_TENANT_ID: "${{ secrets.AZURE_TENANT_ID }}"
 
 defaults:
+  run:
     working-directory: ./infrastructure
 
 jobs:

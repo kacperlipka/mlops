@@ -23,8 +23,8 @@ variable "kubernetes_cluster" {
     node_count = number
   })
   default = {
-    name = "mlops-cluster"
-    vm_size = "Standard_D4ds_v5"
+    name       = "mlops-cluster"
+    vm_size    = "Standard_D4ds_v5"
     node_count = 1
   }
   description = "Kubernetes cluster configuration"

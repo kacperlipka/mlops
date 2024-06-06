@@ -6,13 +6,9 @@ env:
   ARM_CLIENT_ID: "${{ secrets.AZURE_CLIENT_ID }}"
   ARM_SUBSCRIPTION_ID: "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
   ARM_TENANT_ID: "${{ secrets.AZURE_TENANT_ID }}"
-  TF_WORKSPACE: "mlops/infrastructure"
-
-defaults:
-  run:
-    working-directory: $TF_WORKSPACE
 
 jobs:
+  working-directory: ./infrastructure
   terraform-plan:
     name: 'Terraform Plan'
     runs-on: ubuntu-latest

@@ -5,7 +5,7 @@ resource "azurerm_resource_group" "this" {
   location = var.location
 }
 
-data "resource_group" "this" {
+data "azurerm_resource_group" "this" {
   count = var.resource_group.create ? 0 : 1
 
   name = var.resource_group.name

@@ -35,13 +35,19 @@ jobs:
         resource-group: ${{ env.RESOURCE_GROUP }}
         cluster-name: ${{ env.CLUSTER_NAME }}
     
-    - run: |
+    - name: Install kustomize
+      run: |
         curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh"  | bash
 
     - uses: actions/checkout@v4
       with:
         repository: Azure/kubeflow-aks
         path: manifests
-
-    - run: |
+    
+    - name: Generate password
+      run: | 
+        cp deployments/tls manifests/tls
+      
+    - name: Deploy kubeflow
+      run: |
         while ! kustomize build tls | kubectl apply -f -; do echo "Retrying to apply resources"; sleep 10; done

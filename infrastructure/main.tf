@@ -126,6 +126,8 @@ resource "azurerm_kubernetes_cluster" "this" {
   location            = "Poland Central"
   resource_group_name = local.resource_group_name
 
+  dns_prefix = "mlops"
+
   default_node_pool {
     name           = "default"
     node_count     = var.kubernetes_cluster.node_count
@@ -134,7 +136,10 @@ resource "azurerm_kubernetes_cluster" "this" {
     vnet_subnet_id = azurerm_subnet.kubernetes_nodes.id
   }
 
-  dns_prefix = "mlops"
+  network_profile {
+    network_plugin = "azure"
+  }
+
   identity {
     type = "SystemAssigned"
   }

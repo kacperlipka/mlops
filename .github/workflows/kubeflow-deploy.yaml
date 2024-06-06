@@ -42,7 +42,7 @@ jobs:
     - uses: actions/checkout@v4
       with:
         repository: Azure/kubeflow-aks
-      run: ls
+        run: ls
       
     - name: Deploy kubeflow
       run: |

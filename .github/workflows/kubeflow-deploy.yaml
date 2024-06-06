@@ -44,7 +44,7 @@ jobs:
         repository: Azure/kubeflow-aks
     
     - run: |
-        cp deployments/tls manifests/tls
+        cp -a deployments/tls manifests/tls
       
     - name: Deploy kubeflow
       run: |

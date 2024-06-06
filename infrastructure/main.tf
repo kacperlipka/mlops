@@ -17,7 +17,7 @@ locals {
 
 resource "azurerm_kubernetes_cluster" "example" {
   name                = var.kubernetes_cluster.name
-  location            = var.location
+  location            = "Poland Central"
   resource_group_name = local.resource_group_name
 
   default_node_pool {

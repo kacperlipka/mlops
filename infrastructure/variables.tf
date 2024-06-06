@@ -1,6 +1,6 @@
 variable "location" {
   type        = string
-  default     = "West Europe"
+  default     = "Poland Central"
   description = "The Azure region to deploy resources"
 }
 
@@ -10,8 +10,8 @@ variable "resource_group" {
     create = bool
   })
   default = {
-    name   = "mlops"
-    create = false
+    name   = "mlops-rg"
+    create = true
   }
   description = "Resource group configuration"
 }
@@ -24,7 +24,7 @@ variable "kubernetes_cluster" {
   })
   default = {
     name = "mlops-cluster"
-    vm_size = "Standard_D2_v2"
+    vm_size = "Standard_D4ds_v5"
     node_count = 1
   }
   description = "Kubernetes cluster configuration"

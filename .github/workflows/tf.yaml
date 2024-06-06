@@ -1,5 +1,9 @@
 name: "Infrastructure as Code"
 
+permissions:
+  id-token: write
+  contents: read
+
 on: workflow_dispatch
 
 env:

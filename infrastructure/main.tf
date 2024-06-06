@@ -25,4 +25,6 @@ resource "azurerm_kubernetes_cluster" "example" {
     node_count = var.kubernetes_cluster.node_count
     vm_size    = var.kubernetes_cluster.vm_size
   }
+
+  dns_prefix = "mlops"
 }

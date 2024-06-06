@@ -72,7 +72,7 @@ jobs:
       id: init
       run: terraform init
 
-    - name: Terraform Apply
+    - name: Terraform Apply Destroy
       id: apply
       run: terraform apply -destroy -auto-approve 
       

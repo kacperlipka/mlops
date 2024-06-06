@@ -63,10 +63,10 @@ resource "azurerm_public_ip" "this" {
   allocation_method   = "Static"
 }
 
-resource "azurerm_application_gateway" "network" {
+resource "azurerm_application_gateway" "this" {
   name                = "mlops-appgw"
   resource_group_name = local.resource_group_name
-  location            = azurerm_resource_group.this.location
+  location            = var.location
 
   sku {
     name     = "Standard_v2"
@@ -76,7 +76,7 @@ resource "azurerm_application_gateway" "network" {
 
   gateway_ip_configuration {
     name      = "mlops-gateway-ip-configuration"
-    subnet_id = azurerm_subnet.example.id
+    subnet_id = azurerm_subnet.appgw.id
   }
 
   frontend_port {
@@ -86,7 +86,7 @@ resource "azurerm_application_gateway" "network" {
 
   frontend_ip_configuration {
     name                 = local.frontend_ip_configuration_name
-    public_ip_address_id = azurerm_public_ip.example.id
+    public_ip_address_id = azurerm_public_ip.this.id
   }
 
   backend_address_pool {

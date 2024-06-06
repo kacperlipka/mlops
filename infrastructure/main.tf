@@ -27,4 +27,7 @@ resource "azurerm_kubernetes_cluster" "example" {
   }
 
   dns_prefix = "mlops"
+  identity {
+    type = "SystemAssigned"
+  }
 }

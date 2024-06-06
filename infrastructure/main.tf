@@ -42,7 +42,7 @@ resource "azurerm_subnet" "kubernetes_nodes" {
   name                 = "kubernetes-nodes-subnet"
   resource_group_name  = local.resource_group_name
   virtual_network_name = azurerm_virtual_network.this.name
-  address_prefixes     = ["10.0.2.0/24"]
+  address_prefixes     = ["10.0.3.0/24"]
 }
 
 resource "azurerm_dns_zone" "this" {

@@ -14,7 +14,7 @@ env:
   RESOURCE_GROUP: "mlops"
 
 jobs:
-  terraform-plan:
+  deploy-kubeflow:
     name: 'Deploy kubeflow'
     runs-on: ubuntu-latest
 
@@ -34,6 +34,14 @@ jobs:
       with:
         resource-group: ${{ env.RESOURCE_GROUP }}
         cluster-name: ${{ env.CLUSTER_NAME }}
+    
+    - run: |
+        curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh"  | bash
+
+    - uses: actions/checkout@v4
+      with:
+        repository: Azure/kubeflow-aks
+        path: manifests
 
     - run: |
-        kubectl get pod
+        while ! kustomize build tls | kubectl apply -f -; do echo "Retrying to apply resources"; sleep 10; done

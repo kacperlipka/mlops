@@ -10,8 +10,8 @@ variable "resource_group" {
     create = bool
   })
   default = {
-    name   = "mlops-rg"
-    create = true
+    name   = "mlops"
+    create = false
   }
   description = "Resource group configuration"
 }

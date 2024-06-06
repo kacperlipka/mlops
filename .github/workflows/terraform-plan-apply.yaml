@@ -1,4 +1,4 @@
-name: "Infrastructure as Code"
+name: "Deploy Infrastructure"
 
 permissions:
   id-token: write

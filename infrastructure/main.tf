@@ -62,7 +62,7 @@ resource "azurerm_public_ip" "this" {
   name                = "appgw-pip"
   resource_group_name = local.resource_group_name
   location            = var.location
-  allocation_method   = "Dynamic"
+  allocation_method   = "Static"
 }
 
 

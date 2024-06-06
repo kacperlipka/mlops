@@ -65,7 +65,7 @@ resource "azurerm_public_ip" "this" {
 
 resource "azurerm_application_gateway" "network" {
   name                = "mlops-appgw"
-  resource_group_name = azurerm_resource_group.this.name
+  resource_group_name = local.resource_group_name
   location            = azurerm_resource_group.this.location
 
   sku {

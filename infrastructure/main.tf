@@ -30,8 +30,16 @@ resource "azurerm_subnet" "appgw" {
   address_prefixes     = ["10.0.1.0/24"]
 }
 
-resource "azurerm_subnet" "kubernetes" {
-  name                 = "kubernetes-subnet"
+resource "azurerm_subnet" "kubernetes_pods" {
+  name                 = "kubernetes-pods-subnet"
+  resource_group_name  = local.resource_group_name
+  virtual_network_name = azurerm_virtual_network.this.name
+  address_prefixes     = ["10.0.2.0/24"]
+}
+
+
+resource "azurerm_subnet" "kubernetes_nodes" {
+  name                 = "kubernetes-nodes-subnet"
   resource_group_name  = local.resource_group_name
   virtual_network_name = azurerm_virtual_network.this.name
   address_prefixes     = ["10.0.2.0/24"]
@@ -119,10 +127,11 @@ resource "azurerm_kubernetes_cluster" "this" {
   resource_group_name = local.resource_group_name
 
   default_node_pool {
-    name          = "default"
-    node_count    = var.kubernetes_cluster.node_count
-    vm_size       = var.kubernetes_cluster.vm_size
-    pod_subnet_id = azurerm_subnet.kubernetes.id
+    name           = "default"
+    node_count     = var.kubernetes_cluster.node_count
+    vm_size        = var.kubernetes_cluster.vm_size
+    pod_subnet_id  = azurerm_subnet.kubernetes_pods.id
+    vnet_subnet_id = azurerm_subnet.kubernetes_nodes.id
   }
 
   dns_prefix = "mlops"

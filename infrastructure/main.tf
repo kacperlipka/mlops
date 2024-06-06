@@ -12,7 +12,7 @@ data "azurerm_resource_group" "this" {
 }
 
 locals {
-  resource_group_name = var.resource_group.create ? azurerm_resource_group.this[0].name : data.azurerm_resource_group.this[0].name
+  resource_group_name            = var.resource_group.create ? azurerm_resource_group.this[0].name : data.azurerm_resource_group.this[0].name
   backend_address_pool_name      = "${azurerm_virtual_network.this.name}-beap"
   frontend_port_name             = "${azurerm_virtual_network.this.name}-feport"
   frontend_ip_configuration_name = "${azurerm_virtual_network.this.name}-feip"
@@ -37,7 +37,7 @@ resource "azurerm_subnet" "appgw" {
 }
 
 resource "azurerm_subnet" "kubernetes" {
-  name                 = "kubernetes-kubernetes-subnet"
+  name                 = "kubernetes-subnet"
   resource_group_name  = local.resource_group_name
   virtual_network_name = azurerm_virtual_network.this.name
   address_prefixes     = ["10.1.2.0/24"]
@@ -60,6 +60,7 @@ resource "azurerm_public_ip" "this" {
   name                = "appgw-pip"
   resource_group_name = local.resource_group_name
   location            = var.location
+  sku                 = "Standard"
   allocation_method   = "Static"
 }
 

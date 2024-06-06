@@ -129,6 +129,7 @@ resource "azurerm_kubernetes_cluster" "this" {
 
   network_profile {
     network_plugin = "azure"
+    service_cidr   = "10.0.1.0/16"
   }
 
   identity {

@@ -46,7 +46,7 @@ jobs:
     
     - name: Generate password
       run: | 
-        cp deployments/tls manifests/tls
+        ls
       
     - name: Deploy kubeflow
       run: |

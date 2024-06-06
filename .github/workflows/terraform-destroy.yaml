@@ -19,6 +19,7 @@ jobs:
   terraform-destroy:
     name: 'Terraform Destroy'
     runs-on: ubuntu-latest
+    environment: mlops
 
     steps:
     - uses: actions/checkout@v4

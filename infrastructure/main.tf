@@ -12,7 +12,7 @@ data "azurerm_resource_group" "this" {
 }
 
 locals {
-  resource_group_name = var.resource_group.create ? azurerm_resource_group.this[0].name : data.resource_group.this[0].name
+  resource_group_name = var.resource_group.create ? azurerm_resource_group.this[0].name : data.azurerm_resource_group.this[0].name
 }
 
 resource "azurerm_kubernetes_cluster" "example" {

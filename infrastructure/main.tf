@@ -26,17 +26,12 @@ resource "azurerm_subnet" "kubernetes" {
   name                 = "kubernetes-subnet"
   resource_group_name  = local.resource_group_name
   virtual_network_name = azurerm_virtual_network.this.name
-  address_prefixes     = ["10.1.2.0/24"]
-}
-
-resource "azurerm_dns_zone" "this" {
-  name                = "kacperlipka.mlops.com"
-  resource_group_name = local.resource_group_name
+  address_prefixes     = ["10.1.1.0/24"]
 }
 
 resource "azurerm_kubernetes_cluster" "this" {
   name                = var.kubernetes_cluster.name
-  location            = "Poland Central"
+  location            = var.location
   resource_group_name = local.resource_group_name
 
   dns_prefix = "mlops"
@@ -51,6 +46,11 @@ resource "azurerm_kubernetes_cluster" "this" {
     max_count           = var.kubernetes_cluster.max_count
   }
 
+  storage_profile {
+    blob_driver_enabled = true
+    file_driver_enabled = true
+  }
+
   network_profile {
     network_plugin = "azure"
   }
@@ -58,4 +58,14 @@ resource "azurerm_kubernetes_cluster" "this" {
   identity {
     type = "SystemAssigned"
   }
+}
+
+resource "azurerm_storage_account" "this" {
+  name                     = var.storage_account.name
+  resource_group_name      = local.resource_group_name
+  location                 = var.location
+  account_tier             = var.storage_account.account_tier
+  account_replication_type = var.storage_account.account_replication_type
+  is_hns_enabled           = var.storage_account.is_hns_enabled
+  nfsv3_enabled            = var.storage_account.nfs3_enabled
 }

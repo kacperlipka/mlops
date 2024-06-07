@@ -33,3 +33,21 @@ variable "kubernetes_cluster" {
   }
   description = "Kubernetes cluster configuration"
 }
+
+variable "storage_account" {
+  type = object({
+    name                     = string
+    account_tier             = string
+    account_replication_type = string
+    is_hns_enabled           = bool
+    nfs3_enabled             = bool
+  })
+  default = {
+    name                     = "kubeflow-storage-account"
+    account_tier             = "Standard"
+    account_replication_type = "ZRS"
+    is_hns_enabled           = true
+    nfs3_enabled             = true
+  }
+  description = "Storage account configuration"
+}

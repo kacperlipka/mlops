@@ -44,8 +44,8 @@ jobs:
         git clone --recurse-submodules https://github.com/Azure/kubeflow-aks.git
         cp -a kubeflow/values kubeflow-aks/manifests/tls
         cd kubeflow-aks/manifests
-        # while ! kustomize build tls | kubectl apply -f -; do echo "Retrying to apply resources"; sleep 10; done
-        # kubectl rollout restart deployment dex -n auth
+        while ! kustomize build tls | kubectl apply -f -; do echo "Retrying to apply resources"; sleep 10; done
+        kubectl rollout restart deployment dex -n auth
     
     - name: Update certificate
       run: |
@@ -53,3 +53,7 @@ jobs:
         cd kubeflow/values
         sed -i 's/{{IP_ADDRESS}}/'$IP'/g' certificate.yaml
         kubectl apply -f certificate.yaml
+    
+    - name: Create custom storage class
+      run: |
+        kubectl apply -f kubeflow/storage/storageclass.yaml

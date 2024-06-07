@@ -1,0 +1,17 @@
+allowVolumeExpansion: true
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  labels:
+    addonmanager.kubernetes.io/mode: EnsureExists
+    kubernetes.io/cluster-service: "true"
+  name: azureblob-custom
+parameters:
+  protocol: nfs
+  skuName: Premium_LRS
+  resourceGroup: mlops
+  storageAccount: kubeflowtestkki
+  location: polandcentral
+provisioner: blob.csi.azure.com
+reclaimPolicy: Delete
+volumeBindingMode: Immediate

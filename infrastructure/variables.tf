@@ -43,7 +43,7 @@ variable "storage_account" {
     nfs3_enabled             = bool
   })
   default = {
-    name                     = "kubeflow-storage-account"
+    name                     = "mlopskubeflowstorageaccount"
     account_tier             = "Standard"
     account_replication_type = "ZRS"
     is_hns_enabled           = true

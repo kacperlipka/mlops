@@ -52,3 +52,4 @@ jobs:
         IP=$(kubectl get svc -n istio-system istio-ingressgateway -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
         # sed -i 's/{{IP_ADDRESS}}/$IP/g' tls/certificate.
         pwd
+        ls

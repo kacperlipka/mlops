@@ -41,7 +41,7 @@ jobs:
 
     - run: |
         git clone --recurse-submodules https://github.com/Azure/kubeflow-aks.git
-        cp -a kubeflow/values manifests/tls
+        cp -a kubeflow/values kubeflow-aks/manifests/tls
         cd kubeflow-aks
         while ! kustomize build tls | kubectl apply -f -; do echo "Retrying to apply resources"; sleep 10; done
         kubectl rollout restart deployment dex -n auth

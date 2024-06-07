@@ -39,13 +39,9 @@ jobs:
       run: |
         curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh"  | bash
 
-    - uses: actions/checkout@v4
-      with:
-        repository: Azure/kubeflow-aks
-    
-        # cp -a deployments/tls manifests/tls
-        # while ! kustomize build example | kubectl apply -f -; do echo "Retrying to apply resources"; sleep 10; done
-        # kubectl rollout restart deployment dex -n auth
-    - run: ls
-    - run: cd ..
-    - run: ls
+    - run: |
+        git clone --recurse-submodules https://github.com/Azure/kubeflow-aks.git
+        cp -a kubeflow/values manifests/tls
+        cd kubeflow-aks
+        while ! kustomize build tls | kubectl apply -f -; do echo "Retrying to apply resources"; sleep 10; done
+        kubectl rollout restart deployment dex -n auth

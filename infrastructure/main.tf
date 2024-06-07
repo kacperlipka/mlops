@@ -27,6 +27,7 @@ resource "azurerm_subnet" "kubernetes" {
   resource_group_name  = local.resource_group_name
   virtual_network_name = azurerm_virtual_network.this.name
   address_prefixes     = ["10.1.1.0/24"]
+  service_endpoints    = ["Microsoft.Storage"]
 }
 
 resource "azurerm_kubernetes_cluster" "this" {
@@ -70,7 +71,7 @@ resource "azurerm_storage_account" "this" {
   nfsv3_enabled            = var.storage_account.nfs3_enabled
 
   network_rules {
-    default_action = "Deny"
+    default_action             = "Deny"
     virtual_network_subnet_ids = [azurerm_subnet.kubernetes.id]
   }
 }

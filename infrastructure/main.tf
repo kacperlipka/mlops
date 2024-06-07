@@ -68,4 +68,9 @@ resource "azurerm_storage_account" "this" {
   account_replication_type = var.storage_account.account_replication_type
   is_hns_enabled           = var.storage_account.is_hns_enabled
   nfsv3_enabled            = var.storage_account.nfs3_enabled
+
+  network_rules {
+    default_action = "Deny"
+    virtual_network_subnet_ids = [azurerm_subnet.this.id]
+  }
 }

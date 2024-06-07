@@ -13,13 +13,6 @@ data "azurerm_resource_group" "this" {
 
 locals {
   resource_group_name            = var.resource_group.create ? azurerm_resource_group.this[0].name : data.azurerm_resource_group.this[0].name
-  backend_address_pool_name      = "${azurerm_virtual_network.this.name}-beap"
-  frontend_port_name             = "${azurerm_virtual_network.this.name}-feport"
-  frontend_ip_configuration_name = "${azurerm_virtual_network.this.name}-feip"
-  http_setting_name              = "${azurerm_virtual_network.this.name}-be-htst"
-  listener_name                  = "${azurerm_virtual_network.this.name}-httplstn"
-  request_routing_rule_name      = "${azurerm_virtual_network.this.name}-rqrt"
-  redirect_configuration_name    = "${azurerm_virtual_network.this.name}-rdrcfg"
 }
 
 resource "azurerm_virtual_network" "this" {
@@ -39,14 +32,6 @@ resource "azurerm_subnet" "kubernetes" {
 resource "azurerm_dns_zone" "this" {
   name                = "kacperlipka.mlops.com"
   resource_group_name = local.resource_group_name
-}
-
-resource "azurerm_dns_a_record" "this" {
-  name                = "appgw"
-  zone_name           = azurerm_dns_zone.this.name
-  resource_group_name = local.resource_group_name
-  ttl                 = 300
-  records             = [azurerm_public_ip.this.ip_address]
 }
 
 resource "azurerm_kubernetes_cluster" "this" {

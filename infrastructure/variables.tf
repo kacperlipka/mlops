@@ -27,7 +27,7 @@ variable "kubernetes_cluster" {
   default = {
     name       = "mlops-cluster"
     vm_size    = "Standard_D4ds_v5"
-    node_count = 2
+    node_count = 1
     max_count  = 3
     min_count  = 1
   }

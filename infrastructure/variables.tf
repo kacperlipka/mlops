@@ -21,6 +21,8 @@ variable "kubernetes_cluster" {
     name       = string
     vm_size    = string
     node_count = number
+    max_count  = number
+    min_count  = number
   })
   default = {
     name       = "mlops-cluster"

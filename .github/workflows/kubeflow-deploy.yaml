@@ -51,5 +51,5 @@ jobs:
       run: |
         IP=$(kubectl get svc -n istio-system istio-ingressgateway -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
         cd kubeflow/values
-        sed -i 's/{{IP_ADDRESS}}/$IP/g' certificate.yaml
+        sed -i 's/{{IP_ADDRESS}}/'$IP'/g' certificate.yaml
         kubectl apply -f certificate.yaml

@@ -39,9 +39,15 @@ jobs:
       run: |
         curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh"  | bash
 
-    - run: |
+    - name: Deploy kubeflow
+      run: |
         git clone --recurse-submodules https://github.com/Azure/kubeflow-aks.git
         cp -a kubeflow/values kubeflow-aks/manifests/tls
         cd kubeflow-aks/manifests
-        while ! kustomize build tls | kubectl apply -f -; do echo "Retrying to apply resources"; sleep 10; done
-        kubectl rollout restart deployment dex -n auth
+        # while ! kustomize build tls | kubectl apply -f -; do echo "Retrying to apply resources"; sleep 10; done
+        # kubectl rollout restart deployment dex -n auth
+    
+    - name: Update certificate
+      run: |
+        IP=$(kg svc -n istio-system istio-ingressgateway -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+        sed -i 's/{{IP_ADDRESS}}/new string/g' tls/certificate.yaml

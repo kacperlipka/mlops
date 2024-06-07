@@ -43,5 +43,10 @@ jobs:
       with:
         repository: kubeflow/manifests
     
+        # cp -a deployments/tls manifests/tls
+        # while ! kustomize build example | kubectl apply -f -; do echo "Retrying to apply resources"; sleep 10; done
+        # kubectl rollout restart deployment dex -n auth
     - run: |
-        while ! kustomize build example | kubectl apply -f -; do echo "Retrying to apply resources"; sleep 10; done
+        ls
+        cd ..
+        ls

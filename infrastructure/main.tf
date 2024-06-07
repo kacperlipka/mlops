@@ -12,7 +12,7 @@ data "azurerm_resource_group" "this" {
 }
 
 locals {
-  resource_group_name            = var.resource_group.create ? azurerm_resource_group.this[0].name : data.azurerm_resource_group.this[0].name
+  resource_group_name = var.resource_group.create ? azurerm_resource_group.this[0].name : data.azurerm_resource_group.this[0].name
 }
 
 resource "azurerm_virtual_network" "this" {
@@ -47,6 +47,7 @@ resource "azurerm_kubernetes_cluster" "this" {
     vm_size             = var.kubernetes_cluster.vm_size
     vnet_subnet_id      = azurerm_subnet.kubernetes.id
     enable_auto_scaling = true
+    max_count           = 3
   }
 
   network_profile {

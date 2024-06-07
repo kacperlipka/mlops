@@ -41,12 +41,11 @@ jobs:
 
     - uses: actions/checkout@v4
       with:
-        repository: kubeflow/manifests
+        repository: Azure/kubeflow-aks
     
         # cp -a deployments/tls manifests/tls
         # while ! kustomize build example | kubectl apply -f -; do echo "Retrying to apply resources"; sleep 10; done
         # kubectl rollout restart deployment dex -n auth
-    - run: |
-        ls
-        cd ..
-        ls
+    - run: ls
+    - run: cd ..
+    - run: ls

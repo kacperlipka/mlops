@@ -8,9 +8,9 @@ metadata:
   name: azureblob-custom
 parameters:
   protocol: nfs
-  skuName: Premium_LRS
+  skuName: Standard_ZRS
   resourceGroup: mlops
-  storageAccount: kubeflowtestkki
+  storageAccount: mlopskubeflowsa
   location: polandcentral
 provisioner: blob.csi.azure.com
 reclaimPolicy: Delete

@@ -1,3 +1,7 @@
+data "azurerm_subscription" "current" {}
+
+# ---------------------------------------------------------------------------------
+
 resource "azurerm_resource_group" "this" {
   count = var.resource_group.create ? 1 : 0
 
@@ -74,8 +78,8 @@ resource "azurerm_kubernetes_cluster" "this" {
 }
 
 resource "azurerm_role_assignment" "this" {
-  scope                = azurerm_subnet.kubernetes.id
-  role_definition_name = "Reader"
+  scope                = data.azurerm_subscription.current.id
+  role_definition_name = "Contributor"
   principal_id         = azurerm_kubernetes_cluster.this.identity[0].principal_id
 }
 

@@ -65,18 +65,18 @@ resource "azurerm_kubernetes_cluster" "this" {
   }
 
   lifecycle {
-    ignore_changes = [ 
+    ignore_changes = [
       default_node_pool[0].node_count,
       default_node_pool[0].min_count,
       default_node_pool[0].max_count
-    ] 
+    ]
   }
 }
 
 resource "azurerm_role_assignment" "this" {
-  scope = azurerm_subnet.kubernetes.id
+  scope                = azurerm_subnet.kubernetes.id
   role_definition_name = "Reader"
-  principal_id = azurerm_kubernetes_cluster.this.identity[0].principal_id
+  principal_id         = azurerm_kubernetes_cluster.this.identity[0].principal_id
 }
 
 # ---------------------------------------------------------------------------------

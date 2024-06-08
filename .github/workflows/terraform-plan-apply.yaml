@@ -30,7 +30,8 @@ jobs:
         tenant-id: ${{ secrets.AZURE_TENANT_ID }}
         subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }} 
     
-    - uses: hashicorp/setup-terraform@v3
+    - name: Install Terraform
+      uses: hashicorp/setup-terraform@v3
 
     - name: Terraform fmt
       id: fmt
@@ -66,7 +67,8 @@ jobs:
         tenant-id: ${{ secrets.AZURE_TENANT_ID }}
         subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }} 
     
-    - uses: hashicorp/setup-terraform@v3
+    - name: Install Terraform
+      uses: hashicorp/setup-terraform@v3
     
     - name: Terraform Init
       id: init

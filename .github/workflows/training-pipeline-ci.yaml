@@ -1,0 +1,38 @@
+name: "Training pipeline CI"
+
+on: 
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Set up Python 3.9
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.9
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install kfp
+
+    - name: Run python code
+      run: |
+        python /kubeflow/pipelines/main.py
+    
+    - name: Commit and push pipeline.yaml
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git add pipeline.yaml
+        git commit -m "Add pipeline.yaml [skip ci]"
+        git push

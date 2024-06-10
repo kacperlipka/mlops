@@ -27,7 +27,7 @@ jobs:
 
     - name: Run python code
       run: |
-        python /kubeflow/pipelines/main.py
+        python /mlops/kubeflow/pipelines/main.py
     
     - name: Commit and push pipeline.yaml
       run: |

@@ -31,8 +31,8 @@ jobs:
     
     - name: Commit and push pipeline.yaml
       run: |
-        git config --local user.email "action@github.com"
-        git config --local user.name "GitHub Action"
+        git config --local user.email "kacper.lipka.02@gmail.com"
+        git config --local user.name "kacperlipka"
         git add pipeline.yaml
         git commit -m "Add pipeline.yaml [skip ci]"
         git push

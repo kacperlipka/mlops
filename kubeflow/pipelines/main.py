@@ -1,4 +1,4 @@
-import sys
+import os
 import kfp
 from kfp import compiler
 from kfp import dsl
@@ -6,7 +6,7 @@ import auth
 
 KUBEFLOW_ENDPOINT = "https://20.215.85.41"
 KUBEFLOW_USERNAME = "user@example.com"
-KUBEFLOW_PASSWORD = sys.argv[1]
+KUBEFLOW_PASSWORD = os.environ.get("KUBEFLOW_PASSWORD")
 
 auth_session = auth.get_istio_auth_session(
     url=KUBEFLOW_ENDPOINT,

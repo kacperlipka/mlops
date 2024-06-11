@@ -8,11 +8,8 @@ on:
     branches:
       - main
 
-env:
-  KUBEFLOW_PASSWORD: "${{ secrets.KUBEFLOW_PASSWORD }}"
-
 jobs:
-  build:
+  run-training-pipeline:
     runs-on: ubuntu-latest
 
     steps:
@@ -29,5 +26,7 @@ jobs:
         pip install kfp
 
     - name: Run python code
+      env:
+        KUBEFLOW_PASSWORD: "${{ secrets.KUBEFLOW_PASSWORD }}"
       run: |
-        python kubeflow/pipelines/main.py ${{ env.KUBEFLOW_PASSWORD }}
+        python kubeflow/pipelines/main.py

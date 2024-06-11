@@ -8,6 +8,9 @@ on:
     branches:
       - main
 
+env:
+  KUBEFLOW_PASSWORD: "${{ secrets.KUBEFLOW_PASSWORD }}"
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -27,12 +30,4 @@ jobs:
 
     - name: Run python code
       run: |
-        python kubeflow/pipelines/main.py
-    
-    - name: Commit and push pipeline.yaml
-      run: |
-        git config --local user.email "kacper.lipka.02@gmail.com"
-        git config --local user.name "kacperlipka"
-        git add pipeline.yaml
-        git commit -m "Add pipeline.yaml [skip ci]"
-        git push
+        python kubeflow/pipelines/main.py ${{ env.KUBEFLOW_PASSWORD }}

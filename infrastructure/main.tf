@@ -46,13 +46,13 @@ resource "azurerm_kubernetes_cluster" "this" {
   dns_prefix = "mlops"
 
   default_node_pool {
-    name                = "default"
-    vm_size             = var.kubernetes_cluster.vm_size
-    vnet_subnet_id      = azurerm_subnet.kubernetes.id
-    enable_auto_scaling = true
-    node_count          = var.kubernetes_cluster.node_count
-    min_count           = var.kubernetes_cluster.min_count
-    max_count           = var.kubernetes_cluster.max_count
+    name                 = "default"
+    vm_size              = var.kubernetes_cluster.vm_size
+    vnet_subnet_id       = azurerm_subnet.kubernetes.id
+    auto_scaling_enabled = true
+    node_count           = var.kubernetes_cluster.node_count
+    min_count            = var.kubernetes_cluster.min_count
+    max_count            = var.kubernetes_cluster.max_count
   }
 
   storage_profile {

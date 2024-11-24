@@ -42,7 +42,7 @@ jobs:
 
     - name: Apply server deployment and service
       run: |
-        kubectl apply -f server/deployment.yml -n app
+        kubectl apply -f server/deployment.yaml -n app
 
     - name: Apply pinger cronjob
       run: |

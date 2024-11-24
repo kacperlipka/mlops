@@ -42,4 +42,4 @@ jobs:
         
     - name: Apply collector deployment
       run: |
-        kubectl apply -f collector/deployment.yml -n monitoring
+        kubectl apply -f collector/deployment.yaml -n monitoring

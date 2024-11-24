@@ -43,12 +43,12 @@ spec:
         configMap:
           name: collector-requirements
 ---
-
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: metrics-data-pvc
 spec:
+  persistentVolumeReclaimPolicy: Retain
   storageClassName: azureblob-custom
   accessModes:
     - ReadWriteOnce

@@ -1,4 +1,4 @@
-name: "Deploy kubeflow"
+name: "Deploy platform"
 
 permissions:
   id-token: write

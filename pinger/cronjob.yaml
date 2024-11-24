@@ -3,7 +3,7 @@ kind: CronJob
 metadata:
   name: pinger
 spec:
-  schedule: "*/10 * * * *"
+  schedule: "*/20 * * * *"
   jobTemplate:
     spec:
       completions: 8

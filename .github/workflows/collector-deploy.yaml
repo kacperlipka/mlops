@@ -39,6 +39,10 @@ jobs:
     - name: Create ConfigMap with collector code
       run: |
         kubectl create configmap collector-code --from-file=collector/metrics_collector.py -n monitoring --dry-run=client -o yaml | kubectl apply -f -
+
+    - name: Create ConfigMap with requirements
+      run: |
+        kubectl create configmap collector-requirements --from-file=collector/requirements.txt -n monitoring --dry-run=client -o yaml | kubectl apply -f -
         
     - name: Apply collector deployment
       run: |

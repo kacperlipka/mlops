@@ -28,7 +28,7 @@ kind: Service
 metadata:
   labels:
     app: nginx
-  name: nginx-
+  name: nginx
 spec:
   ports:
   - port: 80

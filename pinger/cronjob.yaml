@@ -1,0 +1,21 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: pinger
+spec:
+  schedule: "*/10 * * * *"
+  jobTemplate:
+    spec:
+      completions: 3
+      parallelism: 3
+      template:
+        spec:
+          containers:
+          - name: pinger
+            image: nginx
+            imagePullPolicy: IfNotPresent
+            command:
+            - /bin/sh
+            - -c
+            - apt-get update && apt-get install apache2-utils && ab -n 1000000 http://nginx.app.svc.cluster.local/
+          restartPolicy: OnFailure

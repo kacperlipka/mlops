@@ -1,0 +1,41 @@
+name: Deploy CPU Usage Collector
+
+on: workflow_dispatch
+
+env:
+  ARM_CLIENT_ID: "${{ secrets.AZURE_CLIENT_ID }}"
+  ARM_SUBSCRIPTION_ID: "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
+  ARM_TENANT_ID: "${{ secrets.AZURE_TENANT_ID }}"
+  CLUSTER_NAME: "mlops-cluster"
+  RESOURCE_GROUP: "mlops"
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: OIDC Login to Azure
+      uses: azure/login@v2
+      with:
+        client-id: ${{ secrets.AZURE_CLIENT_ID }}
+        tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+        subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+    
+    - name: Install kubectl
+      uses: azure/setup-kubectl@v3
+
+    - name: Set kubectl context
+      uses: azure/aks-set-context@v3
+      with:
+        resource-group: ${{ env.RESOURCE_GROUP }}
+        cluster-name: ${{ env.CLUSTER_NAME }}
+        
+    - name: Create ConfigMap with collector code
+      run: |
+        kubectl create configmap collector-code --from-file=collector/metrics_collector.py -n monitoring --dry-run=client -o yaml | kubectl apply -f -
+        
+    - name: Apply collector deployment
+      run: |
+        kubectl apply -f collector/deployment.yml -n monitoring

@@ -1,0 +1,96 @@
+name: "Deploy kubeflow"
+
+permissions:
+  id-token: write
+  contents: read
+
+on: workflow_dispatch
+
+env:
+  ARM_CLIENT_ID: "${{ secrets.AZURE_CLIENT_ID }}"
+  ARM_SUBSCRIPTION_ID: "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
+  ARM_TENANT_ID: "${{ secrets.AZURE_TENANT_ID }}"
+  CLUSTER_NAME: "mlops-cluster"
+  RESOURCE_GROUP: "mlops"
+
+jobs:
+  deploy-kube-prometheus-platform:
+    name: 'Deploy kube-prometheus-stack'
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: OIDC Login to Azure
+      uses: azure/login@v2
+      with:
+        client-id: ${{ secrets.AZURE_CLIENT_ID }}
+        tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+        subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+    
+    - name: Install kubectl
+      uses: azure/setup-kubectl@v3
+
+    - name: Set kubectl context
+      uses: azure/aks-set-context@v3
+      with:
+        resource-group: ${{ env.RESOURCE_GROUP }}
+        cluster-name: ${{ env.CLUSTER_NAME }}
+
+    - name: Install Helm
+      uses: azure/setup-helm@v3
+      with:
+        version: 'latest'
+
+    - name: Install kube-prometheus-stack
+      run: |
+        helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+        helm repo update
+        helm upgrade kps prometheus-community/kube-prometheus-stack --namespace monitoring --create-namespace --install
+
+  deploy-kubeflow:
+    name: 'Deploy kubeflow'
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: OIDC Login to Azure
+      uses: azure/login@v2
+      with:
+        client-id: ${{ secrets.AZURE_CLIENT_ID }}
+        tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+        subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+    
+    - name: Install kubectl
+      uses: azure/setup-kubectl@v3
+
+    - name: Set kubectl context
+      uses: azure/aks-set-context@v3
+      with:
+        resource-group: ${{ env.RESOURCE_GROUP }}
+        cluster-name: ${{ env.CLUSTER_NAME }}
+    
+    - name: Install kustomize
+      run: |
+        curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh"  | bash
+
+    - name: Deploy kubeflow
+      run: |
+        git clone --recurse-submodules https://github.com/Azure/kubeflow-aks.git
+        cp -a kubeflow/values kubeflow-aks/manifests/tls
+        cd kubeflow-aks/manifests
+        while ! kustomize build tls | kubectl apply -f -; do echo "Retrying to apply resources"; sleep 10; done
+        kubectl rollout restart deployment dex -n auth
+    
+    - name: Update certificate
+      run: |
+        IP=$(kubectl get svc -n istio-system istio-ingressgateway -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+        cd kubeflow/values
+        sed -i 's/{{IP_ADDRESS}}/'$IP'/g' certificate.yaml
+        kubectl apply -f certificate.yaml
+        echo "Kubeflow is running on: https://$IP/"
+    
+    - name: Create custom storage class
+      run: |
+        kubectl apply -f kubeflow/storage/storageclass.yaml

@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: metrics-collector
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: metrics-collector
+  template:
+    metadata:
+      labels:
+        app: metrics-collector
+    spec:
+      containers:
+      - name: metrics-collector
+        image: python:3.9-slim
+        imagePullPolicy: IfNotPresent
+        command:
+        - /bin/sh
+        - -c
+        - pip install -r /requirements/requirements.txt && python /code/metrics_collector.py
+        env:
+        - name: PROMETHEUS_URL
+          value: "http://kps-kube-prometheus-stack-prometheus:9090"
+        - name: QUERY_INTERVAL
+          value: "1"
+        volumeMounts:
+        - name: metrics-data
+          mountPath: /data
+        - name: collector-code
+          mountPath: /code
+        - name: requirements
+          mountPath: /requirements
+      volumes:
+      - name: metrics-data
+        persistentVolumeClaim:
+          claimName: metrics-data-pvc
+      - name: collector-code
+        configMap:
+          name: collector-code
+      - name: requirements
+        configMap:
+          name: requirements
+---
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: metrics-data-pvc
+spec:
+  storageClassName: azureblob-custom
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi

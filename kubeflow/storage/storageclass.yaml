@@ -13,5 +13,5 @@ parameters:
   storageAccount: mlopskubeflowsa
   location: polandcentral
 provisioner: blob.csi.azure.com
-reclaimPolicy: Delete
+reclaimPolicy: Retain
 volumeBindingMode: Immediate

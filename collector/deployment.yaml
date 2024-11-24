@@ -22,7 +22,7 @@ spec:
         - pip install -r /requirements/requirements.txt && python /code/metrics_collector.py
         env:
         - name: PROMETHEUS_URL
-          value: "http://kps-kube-prometheus-stack-prometheus:9090"
+          value: "http://kps-kube-prometheus-stack-prometheus.monitoring.svc.cluster.local:9090"
         - name: QUERY_INTERVAL
           value: "1"
         volumeMounts:

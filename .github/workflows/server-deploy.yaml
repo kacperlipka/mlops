@@ -1,4 +1,4 @@
-name: Deploy sever and pinger
+name: Deploy server and pinger
 
 on: workflow_dispatch
 

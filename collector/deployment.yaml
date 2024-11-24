@@ -30,7 +30,7 @@ spec:
           mountPath: /data
         - name: collector-code
           mountPath: /code
-        - name: requirements
+        - name: collector-requirements
           mountPath: /requirements
       volumes:
       - name: metrics-data
@@ -39,9 +39,9 @@ spec:
       - name: collector-code
         configMap:
           name: collector-code
-      - name: requirements
+      - name: collector-requirements
         configMap:
-          name: requirements
+          name: collector-requirements
 ---
 
 apiVersion: v1

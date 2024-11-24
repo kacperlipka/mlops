@@ -19,7 +19,7 @@ data:
     enablePasswordDB: true  
     staticPasswords:
     - email: user@example.com
-      hash: $2y$12$ahWWQncgZy0vSywUN23R6uxZrCBiz1G3Qw8qNDkMoLJ/hocdxK6Be
+      hash: $2y$12$P7QbFMU1bj.bJ1wz53Mf2OZxyCpkb6Yl9QGuHTtMqmKQ/UFnokQvK
       username: kacperlipka
       userID: "15841185641784"
     staticClients:

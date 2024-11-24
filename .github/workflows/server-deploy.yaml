@@ -38,7 +38,7 @@ jobs:
         
     - name: Create app namespace
       run: |
-        kubectl create namespace app
+        kubectl create namespace app --dry-run=client -o yaml | kubectl apply -f -
 
     - name: Apply server deployment and service
       run: |

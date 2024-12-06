@@ -3,11 +3,11 @@ kind: CronJob
 metadata:
   name: pinger
 spec:
-  schedule: "*/20 * * * *"
+  schedule: "*/30 * * * *"
   jobTemplate:
     spec:
-      completions: 8
-      parallelism: 8
+      completions: 2
+      parallelism: 2
       successfulJobsHistoryLimit: 0
       template:
         spec:
@@ -18,5 +18,5 @@ spec:
             command:
             - /bin/sh
             - -c
-            - apt-get update && apt-get install -y apache2-utils && ab -n 1000000 http://nginx.app.svc.cluster.local/
+            - apt-get update && apt-get install -y apache2-utils && ab -n 500000 http://nginx.app.svc.cluster.local/
           restartPolicy: OnFailure

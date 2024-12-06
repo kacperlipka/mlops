@@ -30,9 +30,9 @@ spec:
         volumeMounts:
         - name: metrics-data
           mountPath: /data
-        - name: collector-code
+        - name: predictor-code
           mountPath: /code
-        - name: collector-requirements
+        - name: predictor-requirements
           mountPath: /requirements
       volumes:
       - name: metrics-data

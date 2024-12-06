@@ -41,7 +41,7 @@ class MetricsCollector:
         """Query Prometheus for CPU usage metrics"""
         try:
             # Query for nginx CPU usage
-            query = 'rate(container_cpu_usage_seconds_total{container="nginx"}[5m])'
+            query = 'sum(rate(container_cpu_usage_seconds_total{container="nginx"}[5m]))'
             result = self.prom.custom_query(query)
             
             if result and len(result) > 0:

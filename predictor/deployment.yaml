@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: predictor
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: predictor
+  template:
+    metadata:
+      labels:
+        app: predictor
+    spec:
+      containers:
+      - name: predictor
+        image: python:3.9-slim
+        imagePullPolicy: IfNotPresent
+        command:
+        - /bin/sh
+        - -c
+        - pip install -r /requirements/requirements.txt && python /code/predictor.py
+        env:
+        - name: MODEL_URL
+          value: "http://ts-forecaster.kubeflow-user-example-com/v1/models/ts-forecaster:predict"
+        - name: INPUT_FILE
+          value: "/data/metrics.csv"
+        - name: OUTPUT_FILE
+          value: "/data/predictions.csv"
+        volumeMounts:
+        - name: metrics-data
+          mountPath: /data
+        - name: collector-code
+          mountPath: /code
+        - name: collector-requirements
+          mountPath: /requirements
+      volumes:
+      - name: metrics-data
+        persistentVolumeClaim:
+          claimName: metrics-data-pvc
+      - name: predictor-code
+        configMap:
+          name: predictor-code
+      - name: predictor-requirements
+        configMap:
+          name: predictor-requirements
+---
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: metrics-data-pvc
+spec:
+  storageClassName: azureblob-custom
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi

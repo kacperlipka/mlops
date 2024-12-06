@@ -4,11 +4,11 @@ metadata:
   name: pinger
 spec:
   schedule: "*/30 * * * *"
+  successfulJobsHistoryLimit: 0
   jobTemplate:
     spec:
       completions: 2
       parallelism: 2
-      successfulJobsHistoryLimit: 0
       template:
         spec:
           containers:

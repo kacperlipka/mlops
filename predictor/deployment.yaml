@@ -22,7 +22,7 @@ spec:
         - pip install -r /requirements/requirements.txt && python /code/predictor.py
         env:
         - name: MODEL_URL
-          value: "http://ts-forecaster.kubeflow-user-example-com/v1/models/ts-forecaster:predict"
+          value: "http://ts-forecaster-predictor-00001-private.kubeflow-user-example-com/v1/models/ts-forecaster:predict"
         - name: INPUT_FILE
           value: "/data/metrics.csv"
         - name: OUTPUT_FILE

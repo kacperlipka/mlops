@@ -1,179 +1,175 @@
 import pandas as pd
 import numpy as np
 import requests
-import json
 import time
+import os
 from datetime import datetime, timedelta
 from sklearn.preprocessing import MinMaxScaler
 import logging
-import os
 
-# Set up logging
+# Set up logging configuration
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
 
-class CPUPredictor:
-    def __init__(self, model_url, input_file, output_file, sequence_length=60):
+class Predictor:
+    def __init__(self, input_path, output_path, model_url):
         """
-        Initialize the predictor with configuration parameters.
+        Initialize the predictor.
         
         Args:
-            model_url: URL of the deployed model
-            input_file: Path to metrics.csv file
-            output_file: Path to save predictions
-            sequence_length: Number of minutes to use for prediction (default: 60)
+            input_path: Path to the input CSV file with metrics
+            output_path: Path where predictions will be saved
+            model_url: URL of the deployed model endpoint
         """
-        self.model_url = model_url
-        self.input_file = input_file
-        self.output_file = output_file
-        self.sequence_length = sequence_length
+        self.input_path = input_path
+        self.output_path = output_path
         self.scaler = MinMaxScaler()
-        self.last_processed_time = None
-        
-    def prepare_data(self, df):
+        self.model_url = model_url
+        self.last_prediction_time = None
+        self._initialize_scaler()
+    
+    def _initialize_scaler(self):
         """
-        Prepare the input data for prediction.
-        
-        Args:
-            df: DataFrame containing the raw metrics data
-            
-        Returns:
-            Scaled and formatted input data ready for prediction
+        Initialize and fit the MinMaxScaler on all available data.
+        This ensures proper scaling for both input data and predictions.
         """
-        # Convert timestamp to datetime if it's not already
-        df['timestamp'] = pd.to_datetime(df['timestamp'])
-        
-        df_resampled = df.set_index('timestamp').resample('min').mean()
-        
-        df_resampled = df_resampled.ffill()
-        
-        # Get the last sequence_length minutes of data
-        last_sequence = df_resampled['cpu_usage'].values[-self.sequence_length:]
-        
-        # Fit and transform the data
-        scaled_data = self.scaler.fit_transform(last_sequence.reshape(-1, 1))
-        
-        # Reshape for model input (batch_size, sequence_length, features)
-        model_input = scaled_data.reshape(1, self.sequence_length, 1)
-        
-        return model_input, df_resampled.index[-1]
-
-    def make_prediction(self, model_input):
-        """
-        Send the prepared data to the model and get predictions.
-        
-        Args:
-            model_input: Prepared and scaled input data
-            
-        Returns:
-            Array of predicted values
-        """
-        # Prepare the request payload
-        payload = {
-            "instances": model_input.tolist()
-        }
-
         try:
+            df = pd.read_csv(self.input_path)
+            self.scaler.fit(df['cpu_usage'].values.reshape(-1, 1))
+            logger.info("Scaler has been successfully initialized")
+        except Exception as e:
+            logger.error(f"Error during scaler initialization: {e}")
+            raise
+    
+    def predict_next_60_minutes(self):
+        """
+        Make predictions for the next 60 minutes based on the last 60 minutes of data.
+        
+        Returns:
+            tuple: (predictions array, last timestamp) or (None, None) if error occurs
+        """
+        try:
+            # Load and prepare the input data
+            df = pd.read_csv(self.input_path, parse_dates=["timestamp"], index_col="timestamp")
+            df = df.resample("1min").mean().ffill()
+            
+            # Get the last 60 minutes of data
+            last_60_minutes = np.array(df['cpu_usage'].tail(60))
+            last_timestamp = df.index[-1]
+            
+            # Check if we have enough data
+            if len(last_60_minutes) < 60:
+                logger.error(f"Insufficient data points: {len(last_60_minutes)}")
+                return None, None
+            
+            # Scale and reshape input data
+            scaled_input = self.scaler.transform(last_60_minutes.reshape(-1, 1))
+            model_input = scaled_input.reshape(1, 60, 1)
+            
+            # Prepare payload for API request
+            payload = {
+                "instances": model_input.tolist()
+            }
+            
             # Make prediction request
             response = requests.post(self.model_url, json=payload)
             response.raise_for_status()
+            predictions = np.array(response.json()["predictions"])
             
-            # Parse response
-            predictions = np.array(response.json()['predictions'])
+            # Transform predictions back to original scale
+            predictions_reshaped = predictions.reshape(-1, 1)
+            predictions_rescaled = self.scaler.inverse_transform(predictions_reshaped)
+            predictions_flat = predictions_rescaled.flatten()
             
-            # Inverse transform the predictions
-            predictions_original_scale = self.scaler.inverse_transform(predictions.reshape(-1, 1))
+            return predictions_flat, last_timestamp
             
-            return predictions_original_scale
-            
-        except requests.exceptions.RequestException as e:
-            logger.error(f"Error making prediction request: {e}")
-            return None
-
+        except Exception as e:
+            logger.error(f"Error during prediction: {e}")
+            return None, None
+    
     def save_predictions(self, predictions, last_timestamp):
         """
-        Save the predictions to a CSV file.
+        Save predictions to CSV file.
         
         Args:
             predictions: Array of predicted values
             last_timestamp: Timestamp of the last input data point
         """
-        # Generate timestamp for each prediction (one per minute)
-        timestamps = [last_timestamp + timedelta(minutes=i+1) for i in range(len(predictions))]
-        
-        # Create prediction DataFrame
-        pred_df = pd.DataFrame({
-            'timestamp': timestamps,
-            'predicted_cpu_usage': predictions.flatten()
-        })
-        
-        # Append to existing predictions file or create new one
         try:
-            existing_preds = pd.read_csv(self.output_file)
-            existing_preds['timestamp'] = pd.to_datetime(existing_preds['timestamp'])
+            # Generate timestamps for predictions
+            future_timestamps = [last_timestamp + pd.Timedelta(minutes=i+1) for i in range(60)]
             
-            # Remove any overlapping predictions
-            existing_preds = existing_preds[existing_preds['timestamp'] < timestamps[0]]
+            # Create DataFrame with predictions
+            predictions_df = pd.DataFrame({
+                'timestamp': future_timestamps,
+                'predicted_cpu_usage': predictions
+            })
             
-            # Concatenate and save
-            final_preds = pd.concat([existing_preds, pred_df])
+            # If file exists, append new predictions
+            if os.path.exists(self.output_path):
+                existing_df = pd.read_csv(self.output_path, parse_dates=['timestamp'])
+                existing_df['timestamp'] = pd.to_datetime(existing_df['timestamp'])
+                
+                # Remove predictions that overlap with new ones
+                existing_df = existing_df[existing_df['timestamp'] < future_timestamps[0]]
+                
+                # Concatenate existing and new predictions
+                predictions_df = pd.concat([existing_df, predictions_df])
             
-        except FileNotFoundError:
-            final_preds = pred_df
+            # Save to file
+            predictions_df.to_csv(self.output_path, index=False)
+            logger.info(f"Saved predictions from {future_timestamps[0]} to {future_timestamps[-1]}")
             
-        final_preds.to_csv(self.output_file, index=False)
-        logger.info(f"Saved predictions for timestamps from {timestamps[0]} to {timestamps[-1]}")
-
+        except Exception as e:
+            logger.error(f"Error while saving predictions: {e}")
+    
     def run_prediction_loop(self, interval_seconds=60):
         """
-        Main loop to continuously make predictions.
+        Run the main prediction loop.
         
         Args:
-            interval_seconds: How often to make new predictions (default: 60 seconds)
+            interval_seconds: Number of seconds to wait between predictions
         """
         logger.info("Starting prediction loop...")
         
         while True:
             try:
-                # Read the latest data
-                df = pd.read_csv(self.input_file)
+                # Check if input file exists
+                if not os.path.exists(self.input_path):
+                    logger.warning(f"Input file not found: {self.input_path}")
+                    time.sleep(interval_seconds)
+                    continue
                 
-                # Check if we have new data to process
-                latest_time = pd.to_datetime(df['timestamp']).max()
+                # Check for new data
+                df = pd.read_csv(self.input_path, parse_dates=["timestamp"])
+                current_time = pd.to_datetime(df['timestamp']).max()
                 
-                if self.last_processed_time is None or latest_time > self.last_processed_time:
-                    # Prepare data
-                    model_input, last_timestamp = self.prepare_data(df)
+                # Make predictions if new data is available
+                if self.last_prediction_time is None or current_time > self.last_prediction_time:
+                    predictions, last_timestamp = self.predict_next_60_minutes()
                     
-                    # Make prediction
-                    predictions = self.make_prediction(model_input)
-                    
-                    if predictions is not None:
-                        # Save predictions
+                    if predictions is not None and last_timestamp is not None:
                         self.save_predictions(predictions, last_timestamp)
-                        self.last_processed_time = latest_time
-                    
-                # Wait for next interval
+                        self.last_prediction_time = current_time
+                else:
+                    logger.info("No new data to process")
+                
+                # Wait for next iteration
                 time.sleep(interval_seconds)
                 
             except Exception as e:
                 logger.error(f"Error in prediction loop: {e}")
-                time.sleep(interval_seconds)  # Wait before retrying
+                time.sleep(interval_seconds)
 
 if __name__ == "__main__":
-    # Configuration
-    MODEL_URL = os.getenv("MODEL_URL", "http://localhost:8080/v1/models/ts-forecaster:predict")
-    INPUT_FILE = os.getenv("INPUT_FILE", "metrics.csv")
-    OUTPUT_FILE = os.getenv("OUTPUT_FILE", "predicted.csv")
-    
-    # Initialize and run predictor
-    predictor = CPUPredictor(
-        model_url=MODEL_URL,
-        input_file=INPUT_FILE,
-        output_file=OUTPUT_FILE
+    # Initialize and run the predictor
+    predictor = Predictor(
+        input_path="/data/metrics.csv",
+        output_path="/data/predictions.csv",
+        model_url="http://tf-predictor-00001-private/v1/models/tf:predict"
     )
     
     predictor.run_prediction_loop()

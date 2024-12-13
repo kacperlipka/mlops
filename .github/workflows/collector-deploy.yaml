@@ -38,12 +38,12 @@ jobs:
         
     - name: Create ConfigMap with collector code
       run: |
-        kubectl create configmap collector-code --from-file=collector/metrics_collector.py -n kubeflow-user-example-com --dry-run=client -o yaml | kubectl apply -f -
+        kubectl create configmap collector-code --from-file=cpu-usage/collector/metrics_collector.py -n kubeflow-user-example-com --dry-run=client -o yaml | kubectl apply -f -
 
     - name: Create ConfigMap with requirements
       run: |
-        kubectl create configmap collector-requirements --from-file=collector/requirements.txt -n kubeflow-user-example-com --dry-run=client -o yaml | kubectl apply -f -
+        kubectl create configmap collector-requirements --from-file=cpu-usage/collector/requirements.txt -n kubeflow-user-example-com --dry-run=client -o yaml | kubectl apply -f -
         
     - name: Apply collector deployment
       run: |
-        kubectl apply -f collector/deployment.yaml -n kubeflow-user-example-com
+        kubectl apply -f cpu-usage/collector/deployment.yaml -n kubeflow-user-example-com

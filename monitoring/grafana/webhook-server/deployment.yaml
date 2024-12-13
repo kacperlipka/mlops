@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: webhook-server
+spec:
+  selector:
+    matchLabels:
+      app: webhook-server
+  template:
+    metadata:
+      labels:
+        app: webhook-server
+    spec:
+      containers:
+      - name: webhook-server
+        image: python:3.9-slim
+        ports:
+        - containerPort: 5000
+        command:
+        - /bin/sh
+        - -c
+        - pip install -r /requirements/requirements.txt && python -u /code/webhook-server.py
+        volumeMounts:
+        - name: webhook-server-code
+          mountPath: /code
+        - name: webhook-server-requirements
+          mountPath: /requirements
+        - name: mlops-pipeline
+          mountPath: /mlops
+      volumes:
+      - name: mlops-pipeline
+        configMap:
+          name: mlops-pipeline
+      - name: webhook-server-code
+        configMap:
+          name: webhook-server-code
+      - name: webhook-server-requirements
+        configMap:
+          name: webhook-server-requirements
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: webhook-server
+spec:
+  selector:
+    app: webhook-server
+  ports:
+  - port: 5000
+    targetPort: 5000

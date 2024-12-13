@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: model-metrics-exporter
+spec:
+  selector:
+    matchLabels:
+      app: model-metrics-exporter
+  template:
+    metadata:
+      labels:
+        app: model-metrics-exporter
+    spec:
+      containers:
+      - name: model-metrics-exporter
+        image: python:3.9-slim
+        command:
+        - /bin/sh
+        - -c
+        - pip install -r /requirements/requirements.txt && python -u /code/model-metrics-exporter.py
+        volumeMounts:
+        - name: metrics-data
+          mountPath: /data
+        - name: model-metrics-exporter-code
+          mountPath: /code
+        - name: model-metrics-exporter-requirements
+          mountPath: /requirements        
+        ports:
+        - name: metrics
+          containerPort: 8000
+      volumes:
+      - name: metrics-data
+        persistentVolumeClaim:
+          claimName: metrics-data-pvc
+      - name: model-metrics-exporter-code
+        configMap:
+          name: model-metrics-exporter-code
+      - name: model-metrics-exporter-requirements
+        configMap:
+          name: model-metrics-exporter-requirements
+
+---
+
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: model-metrics-exporter
+  labels:
+    release: kps
+spec:
+  selector:
+    matchLabels:
+      app: model-metrics-exporter
+  podMetricsEndpoints:
+  - port: metrics

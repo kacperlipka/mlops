@@ -1,4 +1,4 @@
-name: Deploy CPU Usage Predictor
+name: Deploy webhook server
 
 permissions:
   id-token: write
@@ -36,14 +36,18 @@ jobs:
         resource-group: ${{ env.RESOURCE_GROUP }}
         cluster-name: ${{ env.CLUSTER_NAME }}
         
-    - name: Create ConfigMap with predictor code
+    - name: Create ConfigMap with webhook server code
       run: |
-        kubectl create configmap predictor-code --from-file=cpu-usage/predictor/predictor.py -n kubeflow-user-example-com --dry-run=client -o yaml | kubectl apply -f -
+        kubectl create configmap webhook-server-code --from-file=monitoring/grafana/webhook-server/webhook-server.py -n kubeflow-user-example-com --dry-run=client -o yaml | kubectl apply -f -
 
     - name: Create ConfigMap with requirements
       run: |
-        kubectl create configmap predictor-requirements --from-file=cpu-usage/predictor/requirements.txt -n kubeflow-user-example-com --dry-run=client -o yaml | kubectl apply -f -
-        
-    - name: Apply predictor deployment
+        kubectl create configmap webhook-server-requirements --from-file=monitoring/grafana/webhook-server/requirements.txt -n kubeflow-user-example-com --dry-run=client -o yaml | kubectl apply -f -
+    
+    - name: Create ConfigMap with kfp
       run: |
-        kubectl apply -f cpu-usage/predictor/deployment.yaml -n kubeflow-user-example-com
+        kubectl create configmap mlops-pipeline --from-file=kubeflow/kfp/forecasting_pipeline.yaml -n kubeflow-user-example-com --dry-run=client -o yaml | kubectl apply -f -
+        
+    - name: Apply webhook server deployment
+      run: |
+        kubectl apply -f monitoring/grafana/webhook-server/deployment.yaml -n kubeflow-user-example-com

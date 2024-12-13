@@ -12,6 +12,7 @@ env:
   ARM_TENANT_ID: "${{ secrets.AZURE_TENANT_ID }}"
   CLUSTER_NAME: "mlops-cluster"
   RESOURCE_GROUP: "mlops"
+  SLACK_API_URL: "${{ secrets.SLACK_API_URL }}"
 
 jobs:
   deploy-kube-prometheus-platform:
@@ -46,7 +47,12 @@ jobs:
       run: |
         helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
         helm repo update
-        helm upgrade kps prometheus-community/kube-prometheus-stack --namespace monitoring --create-namespace --install
+        helm upgrade kps prometheus-community/kube-prometheus-stack --namespace monitoring --create-namespace --set "alertmanager.config.global.slack_api_url=${{ env.SLACK_API_URL }} --install
+
+    - name: Apply grafana dashboards
+      run: |
+        kubectl create cm mlops-dashboard --from-file monitoring/grafana/dashboards/model-monitoring.json -n monitoring
+        kubectl label cm mlops-dashboard grafana_dashboard="1" -n monitoring
 
   deploy-kubeflow:
     name: 'Deploy kubeflow'
@@ -94,3 +100,7 @@ jobs:
     - name: Create custom storage class
       run: |
         kubectl apply -f kubeflow/storage/storageclass.yaml
+
+    - name: Install model registry
+      run: |
+        kubectl apply -k "https://github.com/kubeflow/model-registry/manifests/kustomize/options/istio?ref=v0.2.10" -n kubeflow

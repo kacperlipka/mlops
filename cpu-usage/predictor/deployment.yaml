@@ -34,6 +34,9 @@ spec:
           mountPath: /code
         - name: predictor-requirements
           mountPath: /requirements
+        ports:
+        - name: metrics
+          containerPort: 8000
       volumes:
       - name: metrics-data
         persistentVolumeClaim:
@@ -57,3 +60,18 @@ spec:
   resources:
     requests:
       storage: 10Gi
+
+---
+
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: predictor
+  labels:
+    release: kps
+spec:
+  selector:
+    matchLabels:
+      app: predictor
+  podMetricsEndpoints:
+  - port: metrics

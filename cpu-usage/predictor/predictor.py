@@ -4,7 +4,6 @@ import requests
 import time
 import os
 from datetime import datetime, timedelta
-from sklearn.preprocessing import MinMaxScaler
 import logging
 
 # Set up logging configuration
@@ -26,23 +25,8 @@ class Predictor:
         """
         self.input_path = input_path
         self.output_path = output_path
-        self.scaler = MinMaxScaler()
         self.model_url = model_url
         self.last_prediction_time = None
-        self._initialize_scaler()
-    
-    def _initialize_scaler(self):
-        """
-        Initialize and fit the MinMaxScaler on all available data.
-        This ensures proper scaling for both input data and predictions.
-        """
-        try:
-            df = pd.read_csv(self.input_path)
-            self.scaler.fit(df['cpu_usage'].values.reshape(-1, 1))
-            logger.info("Scaler has been successfully initialized")
-        except Exception as e:
-            logger.error(f"Error during scaler initialization: {e}")
-            raise
     
     def predict_next_60_minutes(self):
         """
@@ -52,11 +36,8 @@ class Predictor:
             tuple: (predictions array, last timestamp) or (None, None) if error occurs
         """
         try:
-            # Load and prepare the input data
             df = pd.read_csv(self.input_path, parse_dates=["timestamp"], index_col="timestamp")
             df = df.resample("1min").mean().ffill()
-            
-            # Get the last 60 minutes of data
             last_60_minutes = np.array(df['cpu_usage'].tail(60))
             last_timestamp = df.index[-1]
             
@@ -65,9 +46,7 @@ class Predictor:
                 logger.error(f"Insufficient data points: {len(last_60_minutes)}")
                 return None, None
             
-            # Scale and reshape input data
-            scaled_input = self.scaler.transform(last_60_minutes.reshape(-1, 1))
-            model_input = scaled_input.reshape(1, 60, 1)
+            model_input = last_60_minutes.reshape(1, 60, 1)
             
             # Prepare payload for API request
             payload = {
@@ -77,14 +56,9 @@ class Predictor:
             # Make prediction request
             response = requests.post(self.model_url, json=payload)
             response.raise_for_status()
-            predictions = np.array(response.json()["predictions"])
+            predictions = np.array(response.json()["predictions"]).flatten()
             
-            # Transform predictions back to original scale
-            predictions_reshaped = predictions.reshape(-1, 1)
-            predictions_rescaled = self.scaler.inverse_transform(predictions_reshaped)
-            predictions_flat = predictions_rescaled.flatten()
-            
-            return predictions_flat, last_timestamp
+            return predictions, last_timestamp
             
         except Exception as e:
             logger.error(f"Error during prediction: {e}")
@@ -169,7 +143,10 @@ if __name__ == "__main__":
     predictor = Predictor(
         input_path="/data/metrics.csv",
         output_path="/data/predictions.csv",
-        model_url="http://tf-predictor-00001-private/v1/models/tf:predict"
+        model_url="http://cpu-usage-forecaster-predictor-00001-private/v1/models/tf:predict"
+        # input_path="metrics.csv",
+        # output_path="predictions.csv",
+        # model_url="http://localhost:8080/v1/models/tf:predict"
     )
     
     predictor.run_prediction_loop()

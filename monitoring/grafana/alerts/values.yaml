@@ -1,0 +1,43 @@
+additionalPrometheusRulesMap:
+  rule-name:
+    groups:
+    - name: mlops-alerts
+      rules:
+      - alert: ModelR2ScoreLow
+        expr: model_r2_score < 0.85
+        for: 5m
+    - name: operations
+      rules:
+      - alert: CPUUsageExceeded
+        expr: sum (rate (container_cpu_usage_seconds_total{container="nginx"}[5m])) > 1.5
+        for: 30m
+
+alertmanager:
+  config:
+    global:
+      slack_api_url: --TO-BE-REPLACED--
+    route:
+      receiver: "null"
+      routes:
+      - receiver: "mlops-alerting"
+        matchers:
+        - alertname="ModelR2ScoreLow"
+      - receiver: "slack"
+        matchers:
+        - alertname="CPUUsageExceeded"
+      - receiver: "null"
+        matchers:
+        - alertname="Watchdog"
+    receivers:
+    - name: "null"
+    - name: "mlops-alerting"
+      slack_configs:
+      - send_resolved: true
+        channel: "mlops-alerting"
+      webhook_configs:
+      - url: https://webhook-server.kubeflow-user-example-com.svc.cluster.local:5000/webhook
+        send_resolved: false
+    - name: "slack"
+      slack_configs:
+      - send_resolved: true
+        channel: "mlops-alerting"

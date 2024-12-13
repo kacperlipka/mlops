@@ -1,0 +1,280 @@
+# PIPELINE DEFINITION
+# Name: time-series-forecasting-pipeline
+# Inputs:
+#    author: str [Default: 'system']
+#    data_pvc: str [Default: 'metrics-data-pvc']
+#    model_name: str [Default: 'cpu-usage-forecaster']
+#    model_pvc: str [Default: 'metrics-data-pvc']
+#    model_version: str [Default: '1']
+#    namespace: str [Default: 'kubeflow-user-example-com']
+components:
+  comp-deploy-model:
+    executorLabel: exec-deploy-model
+    inputDefinitions:
+      parameters:
+        model_name:
+          parameterType: STRING
+        model_pvc:
+          parameterType: STRING
+        namespace:
+          parameterType: STRING
+  comp-prepare-data:
+    executorLabel: exec-prepare-data
+    inputDefinitions:
+      parameters:
+        hours_back:
+          defaultValue: 3.0
+          isOptional: true
+          parameterType: NUMBER_INTEGER
+  comp-train-model:
+    executorLabel: exec-train-model
+    inputDefinitions:
+      parameters:
+        author:
+          parameterType: STRING
+        model_name:
+          parameterType: STRING
+        model_pvc:
+          parameterType: STRING
+        model_version:
+          parameterType: STRING
+deploymentSpec:
+  executors:
+    exec-deploy-model:
+      container:
+        args:
+        - --executor_input
+        - '{{$}}'
+        - --function_to_execute
+        - deploy_model
+        command:
+        - sh
+        - -c
+        - "\nif ! [ -x \"$(command -v pip)\" ]; then\n    python3 -m ensurepip ||\
+          \ python3 -m ensurepip --user || apt-get install python3-pip\nfi\n\nPIP_DISABLE_PIP_VERSION_CHECK=1\
+          \ python3 -m pip install --quiet --no-warn-script-location 'kfp==2.7.0'\
+          \ '--no-deps' 'typing-extensions>=3.7.4,<5; python_version<\"3.9\"'  &&\
+          \  python3 -m pip install --quiet --no-warn-script-location 'kserve' 'model_registry'\
+          \ && \"$0\" \"$@\"\n"
+        - sh
+        - -ec
+        - 'program_path=$(mktemp -d)
+
+
+          printf "%s" "$0" > "$program_path/ephemeral_component.py"
+
+          _KFP_RUNTIME=true python3 -m kfp.dsl.executor_main                         --component_module_path                         "$program_path/ephemeral_component.py"                         "$@"
+
+          '
+        - "\nimport kfp\nfrom kfp import dsl\nfrom kfp.dsl import *\nfrom typing import\
+          \ *\n\ndef deploy_model(model_name: str, namespace: str, model_pvc: str):\n\
+          \    \"\"\"Deploy model to KServe with rolling updates\"\"\"\n    from kubernetes\
+          \ import client\n    from kserve import KServeClient, constants\n    from\
+          \ model_registry import ModelRegistry\n    from kserve import V1beta1InferenceService\n\
+          \    from kserve import V1beta1InferenceServiceSpec\n    from kserve import\
+          \ V1beta1PredictorSpec\n    from kserve import V1beta1TFServingSpec\n\n\
+          \    kserve_client = KServeClient()\n\n    isvc = V1beta1InferenceService(\n\
+          \        api_version=constants.KSERVE_V1BETA1,\n        kind=constants.KSERVE_KIND,\n\
+          \        metadata=client.V1ObjectMeta(\n            name=model_name,\n \
+          \           namespace=namespace,\n        ),\n        spec=V1beta1InferenceServiceSpec(\n\
+          \            predictor=V1beta1PredictorSpec(\n                tensorflow=V1beta1TFServingSpec(\n\
+          \                    storage_uri=f\"pvc://{model_pvc}/{model_name}\",\n\
+          \                )\n            )\n        )\n    )\n\n    try:\n      \
+          \  kserve_client.get(model_name, isvc)\n    except:\n        kserve_client.create(isvc,\
+          \ watch=True)\n\n"
+        image: python:3.10
+    exec-prepare-data:
+      container:
+        args:
+        - --executor_input
+        - '{{$}}'
+        - --function_to_execute
+        - prepare_data
+        command:
+        - sh
+        - -c
+        - "\nif ! [ -x \"$(command -v pip)\" ]; then\n    python3 -m ensurepip ||\
+          \ python3 -m ensurepip --user || apt-get install python3-pip\nfi\n\nPIP_DISABLE_PIP_VERSION_CHECK=1\
+          \ python3 -m pip install --quiet --no-warn-script-location 'kfp==2.7.0'\
+          \ '--no-deps' 'typing-extensions>=3.7.4,<5; python_version<\"3.9\"'  &&\
+          \  python3 -m pip install --quiet --no-warn-script-location 'pandas' 'numpy'\
+          \ 'pathlib' && \"$0\" \"$@\"\n"
+        - sh
+        - -ec
+        - 'program_path=$(mktemp -d)
+
+
+          printf "%s" "$0" > "$program_path/ephemeral_component.py"
+
+          _KFP_RUNTIME=true python3 -m kfp.dsl.executor_main                         --component_module_path                         "$program_path/ephemeral_component.py"                         "$@"
+
+          '
+        - "\nimport kfp\nfrom kfp import dsl\nfrom kfp.dsl import *\nfrom typing import\
+          \ *\n\ndef prepare_data(hours_back: int = 3):\n    \"\"\"Prepare time series\
+          \ data for training\"\"\"\n    import pandas as pd\n    from datetime import\
+          \ datetime, timedelta\n    from pathlib import Path\n\n    path = Path(\"\
+          /data/metrics.csv\")\n    df = pd.read_csv(path, parse_dates=[\"timestamp\"\
+          ], index_col=\"timestamp\")\n    df = df.resample(\"1min\").mean()\n\n \
+          \   cutoff_time = df.index.max() - timedelta(hours=hours_back)\n    df_filtered\
+          \ = df[df.index > cutoff_time]\n    df_filtered = df_filtered.dropna()\n\
+          \n    df_filtered.to_csv(\"/data/data.csv\")\n\n"
+        image: python:3.10
+    exec-train-model:
+      container:
+        args:
+        - --executor_input
+        - '{{$}}'
+        - --function_to_execute
+        - train_model
+        command:
+        - sh
+        - -c
+        - "\nif ! [ -x \"$(command -v pip)\" ]; then\n    python3 -m ensurepip ||\
+          \ python3 -m ensurepip --user || apt-get install python3-pip\nfi\n\nPIP_DISABLE_PIP_VERSION_CHECK=1\
+          \ python3 -m pip install --quiet --no-warn-script-location 'kfp==2.7.0'\
+          \ '--no-deps' 'typing-extensions>=3.7.4,<5; python_version<\"3.9\"'  &&\
+          \  python3 -m pip install --quiet --no-warn-script-location 'tensorflow'\
+          \ 'numpy' 'pandas' 'model_registry' 'scikit-learn' 'pathlib' && \"$0\" \"\
+          $@\"\n"
+        - sh
+        - -ec
+        - 'program_path=$(mktemp -d)
+
+
+          printf "%s" "$0" > "$program_path/ephemeral_component.py"
+
+          _KFP_RUNTIME=true python3 -m kfp.dsl.executor_main                         --component_module_path                         "$program_path/ephemeral_component.py"                         "$@"
+
+          '
+        - "\nimport kfp\nfrom kfp import dsl\nfrom kfp.dsl import *\nfrom typing import\
+          \ *\n\ndef train_model(model_name: str, model_version: str, author: str,\
+          \ model_pvc: str):\n    \"\"\"Train LSTM model for time series forecasting\"\
+          \"\"\n    import tensorflow as tf\n    import numpy as np\n    import pandas\
+          \ as pd\n    import os\n    from model_registry import ModelRegistry\n \
+          \   from sklearn.preprocessing import MinMaxScaler\n    from pathlib import\
+          \ Path\n\n    path = Path(\"/data/data.csv\")\n    df = pd.read_csv(path,\
+          \ parse_dates=[\"timestamp\"], index_col=\"timestamp\")\n\n    scaler =\
+          \ MinMaxScaler()\n    scaled_data = scaler.fit_transform(df[['cpu_usage']])\n\
+          \n    input_sequence_length = 60\n    output_sequence_length = 60\n\n  \
+          \  X, y = [], []\n    for i in range(len(scaled_data) - (input_sequence_length\
+          \ + output_sequence_length)):\n        X.append(scaled_data[i:i + input_sequence_length])\n\
+          \        y.append(scaled_data[i + input_sequence_length:i + input_sequence_length\
+          \ + output_sequence_length])\n\n    X, y = np.array(X), np.array(y)\n\n\n\
+          \    train_size = int(0.8 * len(X))\n    X_train, X_test = X[:train_size],\
+          \ X[train_size:]\n    y_train, y_test = y[:train_size], y[train_size:]\n\
+          \n    train_dataset = tf.data.Dataset.from_tensor_slices((X_train, y_train)).batch(32)\n\
+          \    test_dataset = tf.data.Dataset.from_tensor_slices((X_test, y_test)).batch(32)\n\
+          \n    model = tf.keras.models.Sequential([\n        tf.keras.layers.LSTM(64,\
+          \ input_shape=(60, 1), return_sequences=True),\n        tf.keras.layers.LSTM(64,\
+          \ return_sequences=False),\n        tf.keras.layers.Dense(128, activation='relu'),\n\
+          \        tf.keras.layers.Dense(64, activation='relu'),\n        tf.keras.layers.Dense(60)\n\
+          \    ])\n\n    model.compile(\n        optimizer='adam',\n        loss='mse',\n\
+          \        metrics=['mae']\n    )\n\n    history = model.fit(train_dataset,\
+          \ epochs=50)\n\n    # Create versioned directory structure\n    model_dir\
+          \ = f'/models/{model_name}'\n    version_dir = os.path.join(model_dir, model_version)\n\
+          \    os.makedirs(version_dir, exist_ok=True)\n\n    # Save model\n    model.export(version_dir)\n\
+          \n    # Register model\n    registry = ModelRegistry(\n        server_address=\"\
+          http://model-registry-service.kubeflow.svc.cluster.local\",\n        port=8080,\n\
+          \        author=author,\n        is_secure=False\n    )\n\n    registered_model\
+          \ = registry.register_model(\n        model_name,\n        f\"pvc://{model_pvc}/{model_name}/{model_version}\"\
+          ,\n        model_format_name=\"tensorflow\",\n        model_format_version=\"\
+          2.0\",\n        version=model_version,\n        description=\"Simple RNN\
+          \ model for CPU usage prediction\",\n        metadata={\n            \"\
+          loss\": float(history.history['loss'][-1]),\n            \"mae\": float(history.history['mae'][-1])\n\
+          \        }\n    )\n\n"
+        image: python:3.10
+pipelineInfo:
+  name: time-series-forecasting-pipeline
+root:
+  dag:
+    tasks:
+      deploy-model:
+        cachingOptions:
+          enableCache: true
+        componentRef:
+          name: comp-deploy-model
+        dependentTasks:
+        - train-model
+        inputs:
+          parameters:
+            model_name:
+              componentInputParameter: model_name
+            model_pvc:
+              componentInputParameter: model_pvc
+            namespace:
+              componentInputParameter: namespace
+        taskInfo:
+          name: deploy-model
+      prepare-data:
+        cachingOptions: {}
+        componentRef:
+          name: comp-prepare-data
+        inputs:
+          parameters:
+            hours_back:
+              runtimeValue:
+                constant: 24.0
+        taskInfo:
+          name: prepare-data
+      train-model:
+        cachingOptions:
+          enableCache: true
+        componentRef:
+          name: comp-train-model
+        dependentTasks:
+        - prepare-data
+        inputs:
+          parameters:
+            author:
+              componentInputParameter: author
+            model_name:
+              componentInputParameter: model_name
+            model_pvc:
+              componentInputParameter: model_pvc
+            model_version:
+              componentInputParameter: model_version
+        taskInfo:
+          name: train-model
+  inputDefinitions:
+    parameters:
+      author:
+        defaultValue: system
+        isOptional: true
+        parameterType: STRING
+      data_pvc:
+        defaultValue: metrics-data-pvc
+        isOptional: true
+        parameterType: STRING
+      model_name:
+        defaultValue: cpu-usage-forecaster
+        isOptional: true
+        parameterType: STRING
+      model_pvc:
+        defaultValue: metrics-data-pvc
+        isOptional: true
+        parameterType: STRING
+      model_version:
+        defaultValue: '1'
+        isOptional: true
+        parameterType: STRING
+      namespace:
+        defaultValue: kubeflow-user-example-com
+        isOptional: true
+        parameterType: STRING
+schemaVersion: 2.1.0
+sdkVersion: kfp-2.7.0
+---
+platforms:
+  kubernetes:
+    deploymentSpec:
+      executors:
+        exec-prepare-data:
+          pvcMount:
+          - componentInputParameter: data_pvc
+            mountPath: /data
+        exec-train-model:
+          pvcMount:
+          - componentInputParameter: model_pvc
+            mountPath: /models
+          - componentInputParameter: data_pvc
+            mountPath: /data

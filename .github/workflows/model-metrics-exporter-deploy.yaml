@@ -1,4 +1,4 @@
-name: Deploy CPU Usage Predictor
+name: Deploy model metrics exporter
 
 permissions:
   id-token: write
@@ -36,14 +36,14 @@ jobs:
         resource-group: ${{ env.RESOURCE_GROUP }}
         cluster-name: ${{ env.CLUSTER_NAME }}
         
-    - name: Create ConfigMap with predictor code
+    - name: Create ConfigMap with model metrics exporter code
       run: |
-        kubectl create configmap predictor-code --from-file=cpu-usage/predictor/predictor.py -n kubeflow-user-example-com --dry-run=client -o yaml | kubectl apply -f -
+        kubectl create configmap model-metrics-exporter-code --from-file=monitoring/model-metrics-exporter/model-metrics-exporter.py -n kubeflow-user-example-com --dry-run=client -o yaml | kubectl apply -f -
 
     - name: Create ConfigMap with requirements
       run: |
-        kubectl create configmap predictor-requirements --from-file=cpu-usage/predictor/requirements.txt -n kubeflow-user-example-com --dry-run=client -o yaml | kubectl apply -f -
+        kubectl create configmap model-metrics-exporter-requirements --from-file=monitoring/model-metrics-exporter/requirements.txt -n kubeflow-user-example-com --dry-run=client -o yaml | kubectl apply -f -
         
-    - name: Apply predictor deployment
+    - name: Apply model metrics exporter deployment
       run: |
-        kubectl apply -f cpu-usage/predictor/deployment.yaml -n kubeflow-user-example-com
+        kubectl apply -f monitoring/model-metrics-exporter/deployment.yaml -n kubeflow-user-example-com

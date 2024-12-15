@@ -79,8 +79,9 @@ deploymentSpec:
           \           namespace=namespace,\n        ),\n        spec=V1beta1InferenceServiceSpec(\n\
           \            predictor=V1beta1PredictorSpec(\n                tensorflow=V1beta1TFServingSpec(\n\
           \                    storage_uri=f\"pvc://{model_pvc}/{model_name}\",\n\
-          \                )\n            )\n        )\n    )\n\n    try:\n      \
-          \  kserve_client.get(model_name, isvc)\n    except:\n        kserve_client.create(isvc,\
+          \                    args=[\"--model_base_path=/mnt/pvc/cpu-usage-forecaster\"\
+          ]\n                )\n            )\n        )\n    )\n\n    try:\n    \
+          \    kserve_client.get(model_name, isvc)\n    except:\n        kserve_client.create(isvc,\
           \ watch=True)\n\n"
         image: python:3.10
     exec-prepare-data:

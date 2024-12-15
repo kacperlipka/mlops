@@ -130,6 +130,7 @@ def deploy_model(model_name: str, namespace: str, model_pvc: str):
             predictor=V1beta1PredictorSpec(
                 tensorflow=V1beta1TFServingSpec(
                     storage_uri=f"pvc://{model_pvc}/{model_name}",
+                    args=["--model_base_path=/mnt/pvc/cpu-usage-forecaster"]
                 )
             )
         )

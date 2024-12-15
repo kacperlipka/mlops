@@ -53,3 +53,17 @@ spec:
       app: model-metrics-exporter
   podMetricsEndpoints:
   - port: metrics
+
+---
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: metrics-data-pvc
+spec:
+  storageClassName: azureblob-custom
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi

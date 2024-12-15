@@ -103,4 +103,5 @@ jobs:
 
     - name: Install model registry
       run: |
+        kubectl apply -k "https://github.com/kubeflow/model-registry/manifests/kustomize/overlays/db?ref=v0.2.10" -n kubeflow
         kubectl apply -k "https://github.com/kubeflow/model-registry/manifests/kustomize/options/istio?ref=v0.2.10" -n kubeflow

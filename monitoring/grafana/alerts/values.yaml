@@ -5,12 +5,18 @@ additionalPrometheusRulesMap:
       rules:
       - alert: ModelR2ScoreLow
         expr: model_r2_score < 0.85
-        for: 5m
+        for: 180m
+        annotations:
+          summary: "Model R2 Score Low"
+          description: "Model R2 Score is below 0.85. Webhook will be triggered"
     - name: operations
       rules:
       - alert: CPUUsageExceeded
         expr: sum (rate (container_cpu_usage_seconds_total{container="nginx"}[5m])) > 1.5
         for: 30m
+        annotations:
+          summary: "CPU Usage Exceeded"
+          description: "CPU usage is above 1.5 for 30 minutes"
 
 alertmanager:
   config:

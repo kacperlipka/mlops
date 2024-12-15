@@ -143,10 +143,7 @@ if __name__ == "__main__":
     predictor = Predictor(
         input_path="/data/metrics.csv",
         output_path="/data/predictions.csv",
-        model_url="http://cpu-usage-forecaster-predictor-00001-private/v1/models/tf:predict"
-        # input_path="metrics.csv",
-        # output_path="predictions.csv",
-        # model_url="http://localhost:8080/v1/models/tf:predict"
+        model_url="http://cpu-usage-forecaster-predictor-00001-private/v1/models/cpu-usage-forecaster:predict"
     )
     
     predictor.run_prediction_loop()

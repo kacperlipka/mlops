@@ -51,3 +51,7 @@ jobs:
     - name: Apply webhook server deployment
       run: |
         kubectl apply -f monitoring/grafana/webhook-server/deployment.yaml -n kubeflow-user-example-com
+
+    - name: Create ClusterRoleBinding for webhook server
+      run: |
+        kubectl create clusterrolebinding kubeflow-edit --clusterrole kubeflow-edit --user system:serviceaccount:kubeflow-user-example-com:default

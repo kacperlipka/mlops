@@ -26,7 +26,7 @@ def handle_alert():
 
         # Initialize KFP client
         logger.info("Initializing KFP client...")
-        kfp_client = kfp.Client()
+        # kfp_client = kfp.Client()
         
         # Create pipeline run
         logger.info("Starting pipeline run...")

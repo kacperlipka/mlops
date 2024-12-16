@@ -105,7 +105,7 @@ def handle_alert():
 
             # Prepare pipeline parameters
             params = {
-                'hours_back': 8,
+                'hours_back': 5,
                 'model_version': f"{model_version}"
             }
 

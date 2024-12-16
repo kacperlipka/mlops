@@ -5,7 +5,7 @@ additionalPrometheusRulesMap:
       rules:
       - alert: ModelR2ScoreLow
         expr: model_r2_score < 0.85
-        for: 180m
+        for: 300m
         annotations:
           summary: "Model R2 Score Low"
           description: "Model R2 Score is below 0.85. Webhook will be triggered"

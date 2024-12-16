@@ -30,9 +30,9 @@ def handle_alert():
         
         # Create pipeline run
         logger.info("Starting pipeline run...")
-        run = kfp_client.create_run_from_pipeline_package(
-            pipeline_file="/mlops/forecasting_pipeline.yaml"
-        )
+        # run = kfp_client.create_run_from_pipeline_package(
+        #     pipeline_file="/mlops/forecasting_pipeline.yaml"
+        # )
         
         logger.info(f"Successfully started pipeline run with ID: {run.run_id}")
         

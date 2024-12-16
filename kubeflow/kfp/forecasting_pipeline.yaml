@@ -116,8 +116,8 @@ deploymentSpec:
           \ data for training\"\"\"\n    import pandas as pd\n    from datetime import\
           \ datetime, timedelta\n    from pathlib import Path\n\n    path = Path(\"\
           /data/metrics.csv\")\n    df = pd.read_csv(path, parse_dates=[\"timestamp\"\
-          ], index_col=\"timestamp\")\n    df = df.resample(\"1min\").mean()\n\n \
-          \   cutoff_time = df.index.max() - timedelta(hours=hours_back)\n    df_filtered\
+          ], index_col=\"timestamp\")\n    df = df.resample(\"1min\").mean().ffill()\n\
+          \n    cutoff_time = df.index.max() - timedelta(hours=hours_back)\n    df_filtered\
           \ = df[df.index > cutoff_time]\n    df_filtered = df_filtered.dropna()\n\
           \n    df_filtered.to_csv(\"/data/data.csv\")\n\n"
         image: python:3.10
@@ -153,15 +153,13 @@ deploymentSpec:
           \ model_pvc: str):\n    \"\"\"Train LSTM model for time series forecasting\"\
           \"\"\n    import tensorflow as tf\n    import numpy as np\n    import pandas\
           \ as pd\n    import os\n    from model_registry import ModelRegistry\n \
-          \   from sklearn.preprocessing import MinMaxScaler\n    from pathlib import\
-          \ Path\n\n    path = Path(\"/data/data.csv\")\n    df = pd.read_csv(path,\
-          \ parse_dates=[\"timestamp\"], index_col=\"timestamp\")\n\n    scaler =\
-          \ MinMaxScaler()\n    scaled_data = scaler.fit_transform(df[['cpu_usage']])\n\
-          \n    input_sequence_length = 60\n    output_sequence_length = 60\n\n  \
-          \  X, y = [], []\n    for i in range(len(scaled_data) - (input_sequence_length\
-          \ + output_sequence_length)):\n        X.append(scaled_data[i:i + input_sequence_length])\n\
-          \        y.append(scaled_data[i + input_sequence_length:i + input_sequence_length\
-          \ + output_sequence_length])\n\n    X, y = np.array(X), np.array(y)\n\n\n\
+          \   from pathlib import Path\n\n    path = Path(\"/data/data.csv\")\n  \
+          \  df = pd.read_csv(path, parse_dates=[\"timestamp\"], index_col=\"timestamp\"\
+          )\n\n    input_sequence_length = 60\n    output_sequence_length = 60\n\n\
+          \    X, y = [], []\n    for i in range(len(df) - (input_sequence_length\
+          \ + output_sequence_length)):\n        X.append(df[i:i + input_sequence_length])\n\
+          \        y.append(df[i + input_sequence_length:i + input_sequence_length\
+          \ + output_sequence_length])\n\n    X, y = np.array(X), np.array(y)\n\n\
           \    train_size = int(0.8 * len(X))\n    X_train, X_test = X[:train_size],\
           \ X[train_size:]\n    y_train, y_test = y[:train_size], y[train_size:]\n\
           \n    train_dataset = tf.data.Dataset.from_tensor_slices((X_train, y_train)).batch(32)\n\

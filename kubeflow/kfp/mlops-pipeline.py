@@ -12,7 +12,7 @@ def prepare_data(hours_back: int = 3):
 
     path = Path("/data/metrics.csv")
     df = pd.read_csv(path, parse_dates=["timestamp"], index_col="timestamp")
-    df = df.resample("1min").mean()
+    df = df.resample("1min").mean().ffill()
 
     cutoff_time = df.index.max() - timedelta(hours=hours_back)
     df_filtered = df[df.index > cutoff_time]
@@ -32,25 +32,20 @@ def train_model(model_name: str, model_version: str, author: str, model_pvc: str
     import pandas as pd
     import os
     from model_registry import ModelRegistry
-    from sklearn.preprocessing import MinMaxScaler
     from pathlib import Path
     
     path = Path("/data/data.csv")
     df = pd.read_csv(path, parse_dates=["timestamp"], index_col="timestamp")
     
-    scaler = MinMaxScaler()
-    scaled_data = scaler.fit_transform(df[['cpu_usage']])
-    
     input_sequence_length = 60
     output_sequence_length = 60
     
     X, y = [], []
-    for i in range(len(scaled_data) - (input_sequence_length + output_sequence_length)):
-        X.append(scaled_data[i:i + input_sequence_length])
-        y.append(scaled_data[i + input_sequence_length:i + input_sequence_length + output_sequence_length])
+    for i in range(len(df) - (input_sequence_length + output_sequence_length)):
+        X.append(df[i:i + input_sequence_length])
+        y.append(df[i + input_sequence_length:i + input_sequence_length + output_sequence_length])
 
     X, y = np.array(X), np.array(y)
-    
     
     train_size = int(0.8 * len(X))
     X_train, X_test = X[:train_size], X[train_size:]

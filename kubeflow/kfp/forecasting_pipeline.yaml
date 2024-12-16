@@ -3,6 +3,7 @@
 # Inputs:
 #    author: str [Default: 'system']
 #    data_pvc: str [Default: 'metrics-data-pvc']
+#    hours_back: int [Default: 10.0]
 #    model_name: str [Default: 'cpu-usage-forecaster']
 #    model_pvc: str [Default: 'metrics-data-pvc']
 #    model_version: str [Default: '1']
@@ -213,8 +214,7 @@ root:
         inputs:
           parameters:
             hours_back:
-              runtimeValue:
-                constant: 24.0
+              componentInputParameter: hours_back
         taskInfo:
           name: prepare-data
       train-model:
@@ -246,6 +246,10 @@ root:
         defaultValue: metrics-data-pvc
         isOptional: true
         parameterType: STRING
+      hours_back:
+        defaultValue: 10.0
+        isOptional: true
+        parameterType: NUMBER_INTEGER
       model_name:
         defaultValue: cpu-usage-forecaster
         isOptional: true

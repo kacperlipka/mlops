@@ -144,15 +144,16 @@ def deploy_model(model_name: str, namespace: str, model_pvc: str):
 
 @dsl.pipeline(name="Time Series Forecasting Pipeline")
 def forecasting_pipeline(
+    hours_back: int = 10,
     data_pvc: str = "metrics-data-pvc",
     model_pvc: str = "metrics-data-pvc",
     model_name: str = "cpu-usage-forecaster",
     model_version: str = "1",
     author: str = "system",
-    namespace: str = "kubeflow-user-example-com",
+    namespace: str = "kubeflow-user-example-com"
 ):
     # Prepare data
-    prepare_step = prepare_data(hours_back=24)
+    prepare_step = prepare_data(hours_back=hours_back)
     prepare_step.set_caching_options(False)
     kubernetes.mount_pvc(prepare_step, pvc_name=data_pvc, mount_path="/data")
 

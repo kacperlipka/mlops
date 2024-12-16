@@ -40,7 +40,6 @@ def handle_alert():
         return jsonify({
             "status": "success",
             "message": "Pipeline run started",
-            # "run_id": run.run_id
         }), 200
 
     except Exception as e:

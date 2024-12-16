@@ -1,12 +1,11 @@
 from flask import Flask, request, jsonify
 import logging
 from datetime import datetime
-import kfp
 import json
 
 # Set up logging
 logging.basicConfig(
-    level=logging.INFO,
+    level=logging.DEBUG,  # Changed to DEBUG for maximum visibility
     format='%(asctime)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
@@ -16,30 +15,27 @@ app = Flask(__name__)
 @app.route('/webhook', methods=['POST'])
 def handle_alert():
     try:
-        # Detailed logging of the incoming request
-        logger.info("=== Webhook Request Details ===")
-        logger.info(f"Headers: {dict(request.headers)}")
-        logger.info(f"Raw Data: {request.get_data(as_text=True)}")
+        # Log everything we can about the request
+        logger.debug("=== New Webhook Request ===")
+        logger.debug(f"Request Method: {request.method}")
+        logger.debug(f"Endpoint: {request.endpoint}")
+        logger.debug("=== Headers ===")
+        for header, value in request.headers:
+            logger.debug(f"{header}: {value}")
         
-        alert_data = request.json
-        logger.info(f"Parsed JSON: {json.dumps(alert_data, indent=2)}")
+        logger.debug("=== Request Data ===")
+        raw_data = request.get_data(as_text=True)
+        logger.debug(f"Raw data: {raw_data}")
+        
+        # Try to parse JSON if present
+        if request.is_json:
+            data = request.json
+            logger.debug(f"JSON data: {json.dumps(data, indent=2)}")
 
-        # Initialize KFP client
-        logger.info("Initializing KFP client...")
-        # kfp_client = kfp.Client()
-        
-        # Create pipeline run
-        logger.info("Starting pipeline run...")
-        # run = kfp_client.create_run_from_pipeline_package(
-        #     pipeline_file="/mlops/forecasting_pipeline.yaml"
-        # )
-        
-        # logger.info(f"Successfully started pipeline run with ID: {run.run_id}")
-        logger.info(f"Successfully started pipeline run with ID:")
-        
         return jsonify({
             "status": "success",
-            "message": "Pipeline run started",
+            "message": "Webhook received successfully",
+            "timestamp": datetime.now().isoformat()
         }), 200
 
     except Exception as e:
@@ -53,5 +49,5 @@ def handle_alert():
         }), 500
 
 if __name__ == '__main__':
-    logger.info("Starting Grafana webhook server on port 5000...")
+    logger.info("Starting debug webhook server on port 5000...")
     app.run(host='0.0.0.0', port=5000)

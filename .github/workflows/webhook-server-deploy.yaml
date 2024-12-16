@@ -38,20 +38,20 @@ jobs:
         
     - name: Create ConfigMap with webhook server code
       run: |
-        kubectl create configmap webhook-server-code --from-file=monitoring/grafana/webhook-server/webhook-server.py -n kubeflow-user-example-com --dry-run=client -o yaml | kubectl apply -f -
+        kubectl create configmap webhook-server-code --from-file=monitoring/grafana/webhook-server/webhook-server.py -n monitoring --dry-run=client -o yaml | kubectl apply -f -
 
     - name: Create ConfigMap with requirements
       run: |
-        kubectl create configmap webhook-server-requirements --from-file=monitoring/grafana/webhook-server/requirements.txt -n kubeflow-user-example-com --dry-run=client -o yaml | kubectl apply -f -
+        kubectl create configmap webhook-server-requirements --from-file=monitoring/grafana/webhook-server/requirements.txt -n monitoring --dry-run=client -o yaml | kubectl apply -f -
     
     - name: Create ConfigMap with kfp
       run: |
-        kubectl create configmap mlops-pipeline --from-file=kubeflow/kfp/forecasting_pipeline.yaml -n kubeflow-user-example-com --dry-run=client -o yaml | kubectl apply -f -
+        kubectl create configmap mlops-pipeline --from-file=kubeflow/kfp/forecasting_pipeline.yaml -n monitoring --dry-run=client -o yaml | kubectl apply -f -
         
     - name: Apply webhook server deployment
       run: |
-        kubectl apply -f monitoring/grafana/webhook-server/deployment.yaml -n kubeflow-user-example-com
+        kubectl apply -f monitoring/grafana/webhook-server/deployment.yaml -n monitoring
 
     - name: Create ClusterRoleBinding for webhook server
       run: |
-        kubectl create clusterrolebinding kubeflow-edit --clusterrole kubeflow-edit --user system:serviceaccount:kubeflow-user-example-com:default
+        kubectl create clusterrolebinding kubeflow-edit --clusterrole kubeflow-edit --user system:serviceaccount:monitoring:default

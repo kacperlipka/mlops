@@ -41,7 +41,7 @@ alertmanager:
       - send_resolved: true
         channel: "mlops-alerting"
       webhook_configs:
-      - url: http://webhook-server.kubeflow-user-example-com.svc.cluster.local:5000/webhook
+      - url: http://webhook-server:5000/webhook # webhook server is deployed in the same namespace as KPS for now
         send_resolved: false
     - name: "slack"
       slack_configs:

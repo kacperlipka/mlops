@@ -32,11 +32,11 @@ def get_model_registry():
 def get_latest_model_version(registry, model_name):
     """Get the latest model version safely."""
     try:
-        versions = registry.list_model_versions(model_name)
+        versions = registry.get_model_versions(model_name)
         if not versions:
             logger.info(f"No versions found for model {model_name}, starting from version 1")
             return 0
-        latest_version = max(version.id for version in versions)
+        latest_version = max(int(version.name) for version in versions)
         logger.info(f"Found latest version {latest_version} for model {model_name}")
         return latest_version
     except Exception as e:
@@ -106,7 +106,7 @@ def handle_alert():
             # Prepare pipeline parameters
             params = {
                 'hours_back': 3,
-                'model_version': model_version
+                'model_version': f"{model_version}"
             }
 
             # Run the pipeline with detailed configuration
@@ -114,6 +114,7 @@ def handle_alert():
             run = client.run_pipeline(
                 experiment_id=experiment_id,
                 pipeline_id=pipeline_id,
+                version_id=version_id,
                 job_name=job_name,
                 params=params
             )

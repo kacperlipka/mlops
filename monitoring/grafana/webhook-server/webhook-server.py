@@ -34,7 +34,8 @@ def handle_alert():
         #     pipeline_file="/mlops/forecasting_pipeline.yaml"
         # )
         
-        logger.info(f"Successfully started pipeline run with ID: {run.run_id}")
+        # logger.info(f"Successfully started pipeline run with ID: {run.run_id}")
+        logger.info(f"Successfully started pipeline run with ID:")
         
         return jsonify({
             "status": "success",

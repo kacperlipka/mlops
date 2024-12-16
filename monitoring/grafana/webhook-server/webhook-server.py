@@ -20,6 +20,7 @@ def get_model_registry():
         registry = ModelRegistry(
             server_address="http://model-registry-service.kubeflow.svc.cluster.local",
             port=8080,
+            author="system",
             is_secure=False
         )
         logger.info("Successfully initialized Model Registry client")
